@@ -1,51 +1,64 @@
-from Codebase import *
+from Code.Codebase import *
 
+#see if there's a more informative way to initialise aircraft_geometry
+def aircraft_geometry(fname: str, 
+                      pf: dict, ang: dict,
+                      wing_loc: list, hstab_loc: list, vstab_loc: list,
+                      pf_h: dict, pf_v: dict,
+                      elv_hinge = 0.7, rud_hinge = 0.7, ail_hinge = 0.7,
+                      afs = {'main': None, 'hstab': None, 'vstab': None}):
 
-def aircraft_geometry(fname: str, S, ar, tr, sw = None, dh = 0.0, inc = 0.0, tw = 0.0):
-    #Planform parameters for defining your main wing
-#    S = 0.2
-#    ar = 6
-#    tr = 1
-
-    #Calculating values more relevant to AVL
-    b = np.sqrt(S*ar)
-    cr = 2*S/(b*(1+tr))
-    ct = tr*cr
-
-    #Four angles for defining your wing
-    if sw is None: sweep = np.arctan(0.125*b*cr*(1-tr)) #for quarter no taper
-    else: sweep = sw /180*np.pi #leading edge
-    dihedral = dh /180*np.pi
-    incidence = inc 
-    twist = tw
-    
     "Plane"
-    plane = des_plane(Name= fname, Mach=0, Sref = S, bref = 0, cref = 0, Xref=0, Yref=0.0, Zref=0)
+    plane = des_plane(Name= fname, Mach=0, Sref = pf['S'], bref = 0, cref = 0, Xref=0, Yref=0.0, Zref=0)
 
     "Surfaces"
-    af1 = 'AVL/Airfoils/SD7032-099-88.dat'
-    wing = des_surf(plane, Name='Wing', YDUPLICATE=0.0, Nspanwise=31)
-    hstab = des_surf(plane, Name='Hstab', TRANSLATE=(0.720, 0, 0.19), YDUPLICATE=0.0)
-    vstab = des_surf(plane, Name='Vstab', TRANSLATE=(0.700, 0, 0))
+    wing = des_surf(plane, Name='Wing', YDUPLICATE=0.0, 
+                    TRANSLATE = (wing_loc[0], wing_loc[1], wing_loc[2]), Nspanwise=31)
+    
+    hstab = des_surf(plane, Name='Hstab', 
+                     TRANSLATE=(hstab_loc[0], hstab_loc[1], hstab_loc[2]), YDUPLICATE=0.0)
+    
+    vstab = des_surf(plane, Name='Vstab', 
+                     TRANSLATE=(vstab_loc[0], vstab_loc[1], vstab_loc[2]))
+    
     plane.use_reference(wing)
     hstab.assign(COMPONENT=1)
     vstab.assign(COMPONENT=1)
 
     "Sections"
-    wingsec000 = des_sec(wing, Xle=0.0, Yle=0.0, Zle=0.0, Chord=cr, Ainc=incidence, AFILE=af1)
-    wingsec200 = des_sec(wing, Xle=b/2*np.tan(sweep), Yle=b/2, Zle=b/2*np.tan(dihedral), Chord=ct, Ainc=incidence+twist, AFILE=af1) 
+    wingsec000 = des_sec(wing, Xle=0.0, Yle=0.0, Zle=0.0, 
+                         Chord=pf['cr'], Ainc=ang['inc'], 
+                         AFILE=afs['main'])
+    wingsec200 = des_sec(wing, 
+                         Xle=pf['b']/2*np.tan(ang['sweep']), 
+                         Yle=pf['b']/2, 
+                         Zle=pf['b']/2*np.tan(ang['dihedral']), 
+                         Chord=pf['ct'], 
+                         Ainc=ang['inc']+ang['tw'], 
+                         AFILE=afs['main']) 
 
-    hstabsec000 = des_sec(hstab, Xle=0.0, Yle=0.0, Zle=0.0, Chord=0.07)
-    hstabsec100 = des_sec(hstab, Xle=0, Yle=0.138, Zle=0.0, Chord=0.07)
-    vstabsec000 = des_sec(vstab, Xle=0.0, Yle=0.0, Zle=0.0, Chord=0.10)
-    vstabsec100 = des_sec(vstab, Xle=0.0, Yle=0, Zle=0.175, Chord=0.10)
+    hstabsec000 = des_sec(hstab, Xle=0.0, Yle=0.0, Zle=0.0, Chord=pf_h['cr'], 
+                          AFILE = afs['hstab'])
+    hstabsec100 = des_sec(hstab, 
+                          Xle=pf_h['b']/2*np.tan(ang['sweep']),
+                          Yle=pf_h['b']/2, 
+                          Zle=0.0, 
+                          Chord=pf_h['ct'], AFILE = afs['hstab'])
+    
+    vstabsec000 = des_sec(vstab, Xle=0.0, Yle=0.0, Zle=0.0, Chord=pf_v['cr'],
+                          AFILE = afs['vstab'])
+    vstabsec100 = des_sec(vstab, 
+                          Xle=pf_v['b']*np.tan(ang['sweep']), 
+                          Yle=0, 
+                          Zle=pf_v['b'], 
+                          Chord=pf_v['ct'], AFILE = afs['vstab'])
 
     "Control Surfaces"
     #Keep your control surfaces named "Aileron", "Elevator", and "Rudder" for the best results
-    elvstart = des_ctrl(hstabsec000, Cname='Elevator', Xhinge=0.6, SgnDup=1)
-    elvend = des_ctrl(hstabsec100, Cname='Elevator', Xhinge=0.6, SgnDup=1)
-    rudstart = des_ctrl(vstabsec000, Cname = 'Rudder', Xhinge = 0.75)
-    rudend = des_ctrl(vstabsec100, Cname = 'Rudder', Xhinge = 0.75)
+    elvstart = des_ctrl(hstabsec000, Cname='Elevator', Xhinge=elv_hinge, SgnDup=1)
+    elvend = des_ctrl(hstabsec100, Cname='Elevator', Xhinge=elv_hinge, SgnDup=1)
+    rudstart = des_ctrl(vstabsec000, Cname = 'Rudder', Xhinge = rud_hinge)
+    rudend = des_ctrl(vstabsec100, Cname = 'Rudder', Xhinge = rud_hinge)
     """
     Don't need to edit this unless necessary
     """
@@ -53,8 +66,9 @@ def aircraft_geometry(fname: str, S, ar, tr, sw = None, dh = 0.0, inc = 0.0, tw 
     hstab.order(orientation=HORIZONTAL)
     vstab.order(orientation=VERTICAL)
 
-    plane.write_to_avl(filename="Junitaper")
+    plane.write_to_avl(filename=fname)
 
+#in the works
 def tail_zerotrim(mac, S_h, V_ht = 0.4, V_vt = 0.07, l = None): #manually write in angles & wing def
     #Planform parameters for defining your main wing
     S = 0.2

@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Polygon
 import math
 from wing_def import * 
+from AVLWrapper.aircraft_sauce import *
 
 #constants at flight conditions
 rho = 1.225 #standard sea level conditions (might want to be hotter than this??)
@@ -30,7 +31,8 @@ class Component:
     
 
     def __init__(this, x: float, mat: str, type = None, **kwargs):
-        this.cfg = kwargs
+        this.cfg = kwargs 
+        #specify aero = wing, hstab, vstab for avl purposes
         this.x = x #distance from the nose
         this.material = mat_property[mat]
         this.S_wet = None
@@ -133,7 +135,7 @@ class Wing(Component):
         print(this.planform)
         if angles[0] == -1: this.planform['sweep'] = np.arctan(0.125*this.planform['b']*this.planform['cr']*(1-this.planform['tr'])) #for quarter no sweep
         else: this.planform['sweep'] = np.radians(angles[0]); #leading edge sweep
-        this.planform['dihedral'] = angles[1]; this.planform['inc'] = angles[2]; this.planform['tw'] = angles[3]
+        this.planform['dihedral'] = np.radians(angles[1]); this.planform['inc'] = angles[2]; this.planform['tw'] = angles[3]
         #to find mass
         x = np.linspace(0, this.planform['b']/2, 50) #your discretisation wooo
         xsec = csec(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
@@ -158,9 +160,14 @@ class Wing(Component):
         return plt.Polygon(xy = list(zip(x,y)), color='r', fill = False, linewidth = 1.5)
 
 class Plane():
-    def __init__(this, all: list, Sref):
+    def __init__(this, name, all: list, Sref):
+        this.name = name
         this.components = all
         this.Sref = Sref
+        this.avl = []
+        for component in all:
+            if 'aero' in component.cfg:
+                this.avl.append(component)
 
     def plane_plot(this, components: list): #plot the plane: wing, hstab, vstab, fuse, boom
         plt.figure()
@@ -171,6 +178,43 @@ class Plane():
         ax.axis('equal')
         # set the figure limits
         plt.xlim([-0.5, 2]); plt.ylim([-2, 2])
+    
+    def to_avl(this):
+        wing_loc = []; hstab_loc = []; vstab_loc = []
+        pf_vstab = {}; pf_hstab = {}
+        for surf in this.avl:
+            xle = 0.0; yle = 0.0; zle = 0.0; 
+            xle = surf.x #distance from nose
+            if 'yle' in surf.cfg:
+                yle = surf.cfg['yle']
+            if 'zle' in surf.cfg:
+                zle = surf.cfg['yle']
+            match surf:
+                case 'wing':
+                    wing_loc = [xle, yle, zle]
+                    pf = surf.planform #dictionary
+                    ang = surf.angles #dictionary
+
+                #empennage is defined by the AR, area, and taper ratio that is typically 1 (might change this)   
+                case 'hstab':
+                    hstab_loc = [xle, yle, zle]
+                    if not 'tr' in surf.cfg: tr = 1
+                    else: tr = surf.cfg['tr']
+                    param = [surf.cfg['AR'], -1, surf.cfg['area'], tr, -1, -1]
+                    pf_hstab['AR'], pf_hstab['b'], pf_hstab['S'], pf_hstab['tr'], pf_hstab['cr'], pf_hstab['ct'] = planform(param)
+                case 'vstab':
+                    vstab_loc = [xle, yle, zle]
+                    if not 'tr' in surf.cfg: tr = 1
+                    else: tr = surf.cfg['tr']
+                    param = [surf.cfg['AR'], -1, surf.cfg['area'], tr, -1, -1]
+                    pf_vstab['AR'], pf_vstab['b'], pf_vstab['S'], pf_vstab['tr'], pf_vstab['cr'], pf_vstab['ct'] = planform(param)
+        aircraft_geometry(this.name, 
+                          pf = pf, #[AR, b, S, taper_ratio, c_r, c_t]
+                          ang = ang, #[sweep, dihedral, incidence, twist]
+                          wing = wing_loc, hstab = hstab_loc, vstab = vstab_loc,
+                          pf_h = pf_hstab, pf_v = pf_vstab
+        )
+
     
     ### this section is for MTOW tally
     def MTOW_tally(this):
@@ -201,9 +245,7 @@ class Plane():
             cd_tot = cd_tot + component.drag_visc(u, this.Sref)
         D = 0.5 * rho * u **2 * this.Sref * cd_tot
         return D
-    
-    def to_avl():
-        pass
+
 
 me = Wing(0, "styrofoam", [6, -1, 0.2, 0.4, -1, -1], [0, 0, 0, 0], "NACA0012.dat")
 print(me.mass)
