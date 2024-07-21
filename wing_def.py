@@ -53,7 +53,7 @@ def centroid(afile):
 def thickness(afile):
     data = pd.read_table(afile,
                         sep='\s+',skiprows=[0],names=['x','y'],index_col=False)
-    split = int(data[data['x'] == 0.0].index.tolist()[0])
+    split = int(data['x'].idxmin())
     top = data.iloc[:split + 1, :]
     top = top.sort_values(by=['x'], ascending=True)
     bottom = data.iloc[split:, :]
@@ -63,17 +63,15 @@ def thickness(afile):
     
     t_max = 0
     for x, y in zip(master['x'], master['y']):
-        if x == 0.0: continue
-        if x == 1.0: continue
+        if x == master['x'].tolist()[0]: continue
+        if x == master['x'].tolist()[-1]: continue
+        
         xprev, yprev = nearest(x, 'prev', check['x'], check['y'])
         xnext, ynext = nearest(x, 'next', check['x'], check['y'])
-        plt.plot([xprev, xnext], [yprev, ynext])
-        #slope = (ynext-yprev)/(xnext - xprev)
-        #slope = (yprev - ynext)/(xprev - xnext)
+        #plt.plot([xprev, xnext], [yprev, ynext])
 
         yinterp = (ynext-yprev)/(xnext - xprev) * (x - xprev) + yprev
-        #plt.scatter(x, yinterp)
-        #plt.scatter(x, y)
+
         t = abs(yinterp) + abs(y)
         if t > t_max:
             t_max = t
