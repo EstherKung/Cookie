@@ -26,20 +26,29 @@
   .PLOP    Plotting options
    NAME s  Specify new configuration name
 
- AVL   c>  
- AVL   c>  
- AVL   c>  
- AVL   c>  
- AVL   c>  
- AVL   c>  
- AVL   c>  
- Reading file: AVL/Planes/Junitaper.avl  ...
+ AVL   c>   F    command not recognized.  Type a "?" for list
 
- Configuration: Juni                                                        
+ AVL   c>   AVLW command not recognized.  Type a "?" for list
+
+ AVL   c>   1    command not recognized.  Type a "?" for list
+
+ AVL   c>   C    command not recognized.  Type a "?" for list
+
+ AVL   c>  
+ AVL   c>  
+ AVL   c>  
+ AVL   c>  
+ AVL   c>  
+ AVL   c>  
+ AVL   c>  
+ AVL   c>  
+ Reading file: AVLWrapper/AVL/Planes/Trainer.avl  ...
+
+ Configuration: Trainer                                                     
 
    Building surface: Wing                                    
-     Reading airfoil from file: AVL/Airfoils/SD7032-099-88.dat
-     Reading airfoil from file: AVL/Airfoils/SD7032-099-88.dat
+     Reading airfoil from file: C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat
+     Reading airfoil from file: C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat
   
    Building duplicate image-surface: Wing (YDUP)                             
 
@@ -222,41 +231,39 @@
   Building bound-vortex velocity matrix...
 
  iter d(alpha)   d(beta)    d(pb/2V)   d(qc/2V)   d(rb/2V)   Elevator   Rudder     
-   1 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.117E+02  0.195E-14
-   2 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00  0.117E+00 -0.221E-16
-   3 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.116E-02  0.124E-15
-   4 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00  0.115E-04  0.483E-16
+   1 -0.204E-45 -0.000E+00  0.126E-30 -0.483E-49 -0.785E-33 -0.783E+01 -0.171E-13
+   2 -0.441E-31 -0.000E+00 -0.126E-30  0.124E-33  0.691E-33  0.843E-15  0.886E-16
  ---------------------------------------------------------------
  Vortex Lattice Output -- Total Forces
 
- Configuration: Juni                                                        
+ Configuration: Trainer                                                     
      # Surfaces =   5
      # Strips   =  98
      # Vortices = 784
 
-  Sref = 0.24000       Cref = 0.20430       Bref =  1.1747    
+  Sref =  654.55       Cref =  11.084       Bref =  62.668    
   Xref =  0.0000       Yref =  0.0000       Zref =  0.0000    
 
  Standard axis orientation,  X fwd, Z down         
 
  Run case:  -unnamed-                              
 
-  Alpha =   0.00000     pb/2V =  -0.00000     p'b/2V =  -0.00000
+  Alpha =  -0.00000     pb/2V =  -0.00000     p'b/2V =  -0.00000
   Beta  =   0.00000     qc/2V =   0.00000
-  Mach  =     0.000     rb/2V =  -0.00000     r'b/2V =  -0.00000
+  Mach  =     0.000     rb/2V =   0.00000     r'b/2V =   0.00000
 
-  CXtot =  -0.01088     Cltot =  -0.00000     Cl'tot =  -0.00000
-  CYtot =   0.00000     Cmtot =  -0.00000
-  CZtot =  -0.35842     Cntot =   0.00000     Cn'tot =   0.00000
+  CXtot =  -0.00261     Cltot =   0.00000     Cl'tot =   0.00000
+  CYtot =  -0.00000     Cmtot =   0.00000
+  CZtot =  -0.14433     Cntot =  -0.00000     Cn'tot =  -0.00000
 
-  CLtot =   0.35842
-  CDtot =   0.01088
-  CDvis =   0.00000     CDind = 0.0108789
-  CLff  =   0.35842     CDff  = 0.0108785    | Trefftz
-  CYff  =   0.00000         e =    0.6537    | Plane  
+  CLtot =   0.14433
+  CDtot =   0.00261
+  CDvis =   0.00000     CDind = 0.0026085
+  CLff  =   0.14433     CDff  = 0.0039910    | Trefftz
+  CYff  =  -0.00000         e =    0.2769    | Plane  
 
-   Elevator        = -11.58480
-   Rudder          =   0.00000
+   Elevator        =  -7.83440
+   Rudder          =  -0.00000
 
  ---------------------------------------------------------------
 

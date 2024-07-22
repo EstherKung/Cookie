@@ -1,8 +1,8 @@
 from Code.Codebase import Case_Maker
 
-AVL_file  = 'TitanWing.avl'
-Case_file = 'Nu_Run_File'
-Case_name = 'Cruise'
+AVL_file  = 'Trainer.avl'
+Case_file = 'Funny_Run_File'
+Case_name = 'Default'
 
 Case_vcv = [
     'a a 0'
@@ -25,9 +25,9 @@ Case_flight_condition = {
 ,   'elevation' : 0.0
 ,   'heading'   : 0.0
 ,   'Mach'      : 0.0
-,   'velocity'  : 444.5331
-,   'density'   : 23.77e-4
-,   'grav.acc.' : 32.17
+,   'velocity'  : 216
+,   'density'   : 1.37551e-6
+,   'grav.acc.' : 386.089
 ,   'turn_rad.' : 0.0
 ,   'load_fac.' : 0.0
 }

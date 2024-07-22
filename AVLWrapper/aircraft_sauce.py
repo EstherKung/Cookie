@@ -1,4 +1,4 @@
-from Code.Codebase import *
+from AVLWrapper.Code.Codebase import *
 
 #see if there's a more informative way to initialise aircraft_geometry
 def aircraft_geometry(fname: str, 
@@ -30,7 +30,7 @@ def aircraft_geometry(fname: str,
                          Chord=pf['cr'], Ainc=ang['inc'], 
                          AFILE=afs['main'])
     wingsec200 = des_sec(wing, 
-                         Xle=pf['b']/2*np.tan(ang['sweep']), 
+                         Xle=pf['b']/2*np.tan(np.pi/2 - ang['sweep']), 
                          Yle=pf['b']/2, 
                          Zle=pf['b']/2*np.tan(ang['dihedral']), 
                          Chord=pf['ct'], 
@@ -40,7 +40,8 @@ def aircraft_geometry(fname: str,
     hstabsec000 = des_sec(hstab, Xle=0.0, Yle=0.0, Zle=0.0, Chord=pf_h['cr'], 
                           AFILE = afs['hstab'])
     hstabsec100 = des_sec(hstab, 
-                          Xle=pf_h['b']/2*np.tan(ang['sweep']),
+                          #Xle=pf_h['b']/2*np.tan(ang['sweep']),
+                          Xle = 0,
                           Yle=pf_h['b']/2, 
                           Zle=0.0, 
                           Chord=pf_h['ct'], AFILE = afs['hstab'])
@@ -48,7 +49,8 @@ def aircraft_geometry(fname: str,
     vstabsec000 = des_sec(vstab, Xle=0.0, Yle=0.0, Zle=0.0, Chord=pf_v['cr'],
                           AFILE = afs['vstab'])
     vstabsec100 = des_sec(vstab, 
-                          Xle=pf_v['b']*np.tan(ang['sweep']), 
+                          #Xle=pf_v['b']*np.tan(ang['sweep']), 
+                          Xle = 0,
                           Yle=0, 
                           Zle=pf_v['b'], 
                           Chord=pf_v['ct'], AFILE = afs['vstab'])

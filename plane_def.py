@@ -3,54 +3,41 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Polygon
-import math
 from wing_def import * 
 from AVLWrapper.aircraft_sauce import *
+from material_library import *
+from fuse_def import *
 
 #constants at flight conditions
-rho = 1.225 #standard sea level conditions (might want to be hotter than this??)
-mu = 1.8e-5
+rho = 0; #standard sea level conditions (might want to be hotter than this??)
+mu = 0; #need these in imperial
 
 class Component:
-    global mat_property
-    mat_property = {
-        "balsa": 952.5, #g/m^2
-        "cf_spar": 138.89, #g/m
-        "cf_boom": 136.7, #g/m
-        "styrofoam": 32000, #g/m^3
-        "lwpla": 2400, #g/m^3
-        "foamboard": 1500, #g/m^2
-        "plywood": 2064, #g/m^2
-        
-        "fuse": 300, #fuselage mass
-        "drivetrain": 218.6, #g // motor + esc + prop, we have 2
-        "battery": 480, #g
-        "avionics": 41.4, #g
-        "tilt_servo": 66.0 #g
-    }
-    
-
-    def __init__(this, x: float, mat: str, type = None, **kwargs):
+    def __init__(this, x: float, mat: str, type = None, point_mass = False, **kwargs):
         this.cfg = kwargs 
         #specify aero = wing, hstab, vstab for avl purposes
         this.x = x #distance from the nose
-        this.material = mat_property[mat]
+        
+        this.material = materials(mat)
         this.S_wet = None
         this.FF = 1 #default form factor
 
         match type: 
             case None: #single components: powertrain, fuselage
                 this.mass = this.material
-                this.x_cg = this.cfg['cg']
-                this.c = this.cfg['length']
-                if 'width' in this.cfg: 
-                    this.b = this.cfg['width'] #for plotting
-                if 'diameter' in this.cfg:
-                    this.b = this.cfg['diameter'] #for plotting
-                    this.d = this.cfg['diameter']; this.l = this.cfg['length'] #for drag buildup
-                if 'xsec' in this.cfg:
-                    this.d = 2 * (this.cfg['xsec'] / np.pi) ** 0.5
-                    this.b = this.d; this.l = this.c # for drag buildup
+                if point_mass: this.x_cg = 0; this.c = 0; this.b = 0; 
+                else:
+                    this.c = this.cfg['length']
+                    if not 'cg' in this.cfg: this.x_cg = this.c/2
+                    else: this.x_cg = this.cfg['cg']
+                    if 'width' in this.cfg: 
+                        this.b = this.cfg['width'] #for plotting
+                    if 'diameter' in this.cfg:
+                        this.b = this.cfg['diameter'] #for plotting
+                        this.d = this.cfg['diameter']; this.l = this.cfg['length'] #for drag buildup
+                    if 'xsec' in this.cfg:
+                        this.d = 2 * (this.cfg['xsec'] / np.pi) ** 0.5
+                        this.b = this.d; this.l = this.c # for drag buildup
             case 'length': #boom, spar
                 this.mass = this.material * this.cfg['length']
                 this.x_cg = this.cfg['xdim']/2
@@ -117,7 +104,7 @@ class Component:
         return c_d
 
     def geometry(this):
-        return plt.Rectangle(xy=(this.x,-this.b/2), width=this.c, height=this.b, color='r', fill = False, linewidth = 1.5)
+        return plt.Rectangle(xy=(this.x,-this.b/2), width=this.c, height=this.b, color='tab:purple', fill = False, linewidth = 1.5)
 
 class Wing(Component):
     def __init__(this, x: float, mat: str, param: list, angles: list, afile: str, type = 'wing'):
@@ -128,36 +115,68 @@ class Wing(Component):
         param in the order in the order [AR, b, S, taper_ratio, c_r, c_t] 
         and for the ones that aren't defined, set to -1
         """
-        super().__init__(x, mat, type = 'aero')
-        this.planform = {}
+        super().__init__(x, mat, type = 'aero', aero = 'wing')
+        this.planform = {}; this.angles = {}
         this.planform['AR'], this.planform['b'], this.planform['S'], this.planform['tr'], this.planform['cr'], this.planform['ct'] = planform(param)
 
-        print(this.planform)
-        if angles[0] == -1: this.planform['sweep'] = np.arctan(0.125*this.planform['b']*this.planform['cr']*(1-this.planform['tr'])) #for quarter no sweep
-        else: this.planform['sweep'] = np.radians(angles[0]); #leading edge sweep
-        this.planform['dihedral'] = np.radians(angles[1]); this.planform['inc'] = angles[2]; this.planform['tw'] = angles[3]
+        #print(this.planform)
+        if angles[0] == -1: this.angles['sweep'] = np.arctan(0.125*this.planform['b']*this.planform['cr']*(1-this.planform['tr'])) #for quarter no sweep
+        else: this.angles['sweep'] = np.radians(angles[0]); #leading edge sweep
+        this.angles['dihedral'] = np.radians(angles[1]); this.angles['inc'] = angles[2]; this.angles['tw'] = angles[3]
         #to find mass
         x = np.linspace(0, this.planform['b']/2, 50) #your discretisation wooo
         xsec = csec(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
         #print(xsec)
-        this.mass = this.material * 2 * np.trapezoid(xsec, x)     
+        this.mass = this.material * 2 * np.trapezoid(xsec, x)   
         xcentroid = centroid(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
-        this.x_cg = np.trapezoid(xcentroid, x)
+        this.x_cg = np.trapezoid(xcentroid, x)/ (0.5 * this.planform['b']) #this is like average value theorem
 
         this.thickness = thickness(afile) #technically this is the thickness-to-chord, since dat file normalised it with c = 1
     
     def geometry(this):
         x = [this.x,
-             0.5*this.planform['b']/2 *np.tan(this.planform['sweep']),
-             0.5*this.planform['b']/2 * np.tan(this.planform['sweep']) + this.planform['ct'],
+             this.x + this.planform['b']/2 *np.tan(np.pi/2 - this.angles['sweep']),
+             this.x + this.planform['b']/2 * np.tan(np.pi/2 - this.angles['sweep']) + this.planform['ct'],
              this.x + this.planform['cr'],
-             0.5*this.planform['b']/2 *np.tan(this.planform['sweep']) + this.planform['ct'],
-             0.5*this.planform['b']/2 * np.tan(this.planform['sweep'])]
+             this.x + this.planform['b']/2 *np.tan(np.pi/2 - this.angles['sweep']) + this.planform['ct'],
+             this.x + this.planform['b']/2 * np.tan(np.pi/2 - this.angles['sweep'])]
         y = [0,
              this.planform['b']/2, this.planform['b']/2,
              0,
              -this.planform['b']/2, -this.planform['b']/2]
-        return plt.Polygon(xy = list(zip(x,y)), color='r', fill = False, linewidth = 1.5)
+        return plt.Polygon(xy = list(zip(x,y)), color='tab:purple', fill = False, linewidth = 1.5)
+
+class LandingGear(Component):
+    def geometry(this):
+        return plt.Rectangle(xy = (this.x, -0.5), width = 1, height = 1, color = 'tab:green', fill = True, linewidth = 1.5)
+    
+class Fuselage(Component):
+    def __init__(this, x: float, section: str, length: float, xsec1: list, xsec2 = None):
+        this.cfg = {} #so the code doesn't break
+        """define the length of the section (in)
+        define the frontal cross section in [base, height]
+        define the secondary cross section in [base, height]
+        if rectangular, no need to define xsec2"""
+        this.x = x
+
+        match section:
+            case "main": this.mass, this.x_cg = main_fuse(xsec1[0], xsec1[1], length)
+            case "nose": this.mass, this.x_cg = nose_fuse(xsec1[0], xsec1[1], xsec2[0], xsec2[1], length)
+            case "aft": this.mass, this.x_cg = aft_fuse(xsec1[0], xsec1[1], xsec2[0], xsec2[1], length)
+        
+        #for plotting
+        this.b1 = xsec1[0]
+        if xsec2 is not None: this.b2 = xsec2[0]
+        else: this.b2 = this.b1
+        this.length = length
+        
+ 
+    def geometry(this):
+        x = [this.x, this.x + this.length,
+             this.x + this.length, this.x]
+        y = [this.b1/2, this.b2/2, 
+             -this.b2/2, -this.b1/2]
+        return plt.Polygon(xy = list(zip(x,y)), color='tab:purple', fill = False, linewidth = 1.5)
 
 class Plane():
     def __init__(this, name, all: list, Sref):
@@ -176,8 +195,9 @@ class Plane():
         for geometry in components:
             ax.add_patch(geometry.geometry())
         ax.axis('equal')
-        # set the figure limits
-        plt.xlim([-0.5, 2]); plt.ylim([-2, 2])
+        # set the figure limit
+        plt.xlim([-5, 90]); plt.ylim([-100, 100])
+        plt.title(this.name)
     
     def to_avl(this):
         wing_loc = []; hstab_loc = []; vstab_loc = []
@@ -189,12 +209,11 @@ class Plane():
                 yle = surf.cfg['yle']
             if 'zle' in surf.cfg:
                 zle = surf.cfg['yle']
-            match surf:
+            match surf.cfg['aero']:
                 case 'wing':
                     wing_loc = [xle, yle, zle]
                     pf = surf.planform #dictionary
                     ang = surf.angles #dictionary
-
                 #empennage is defined by the AR, area, and taper ratio that is typically 1 (might change this)   
                 case 'hstab':
                     hstab_loc = [xle, yle, zle]
@@ -211,8 +230,10 @@ class Plane():
         aircraft_geometry(this.name, 
                           pf = pf, #[AR, b, S, taper_ratio, c_r, c_t]
                           ang = ang, #[sweep, dihedral, incidence, twist]
-                          wing = wing_loc, hstab = hstab_loc, vstab = vstab_loc,
-                          pf_h = pf_hstab, pf_v = pf_vstab
+                          wing_loc = wing_loc, hstab_loc = hstab_loc, vstab_loc = vstab_loc,
+                          pf_h = pf_hstab, pf_v = pf_vstab,
+                          afs = {'main': "C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat",
+                                 'hstab': None, 'vstab': None}
         )
 
     
@@ -221,8 +242,9 @@ class Plane():
         m_tot = 0
         for component in this.components:
             m_tot = m_tot + component.mass
-        MTOW = 9.81 * m_tot/1000
-        return MTOW #Newtons, N
+        #MTOW = 9.8 * m_tot/1000 #Newtons
+        MTOW = 32.17405 * m_tot #slugs to lbs
+        return MTOW 
 
     ### this section is for CG tally
     def CG_tally(this):
@@ -233,9 +255,10 @@ class Plane():
             tally = tally + (component.mass * loc)
             m_tot = m_tot + (component.mass)
         cg = tally/m_tot
-        m_tot = m_tot/1000 #convert to kg
-    
-        return[cg, m_tot]
+        #m_tot = m_tot/1000 #kg
+        m_tot = m_tot #slugs
+        plt.plot(cg, 0, 'x')
+        return float(cg), float(m_tot)
 
     ### this section is for drag buildup - wip
     def drag_tally(this, external, u):
@@ -247,6 +270,3 @@ class Plane():
         return D
 
 
-me = Wing(0, "styrofoam", [6, -1, 0.2, 0.4, -1, -1], [0, 0, 0, 0], "NACA0012.dat")
-print(me.mass)
-print(me.x_cg)

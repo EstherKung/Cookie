@@ -30,7 +30,7 @@ class ADaX():
         if str.endswith(planename, '.avl'): pass
         else: planename += '.avl'
         self.__planename = planename 
-        self.__directory = "AVL/Planes"
+        self.__directory = "AVLWrapper/AVL/Planes"
         self.__planefile = '{}/{}'.format(self.__directory, planename)
         self.__e1 = [meth for meth in dir(self) if callable(getattr(self,meth))]
         self.__e2 = [getattr(self,meth) for meth in dir(self) if callable(getattr(self,meth))]
@@ -107,7 +107,7 @@ class ADaX():
         for out in self.__output_list:
             out = out.split()
             file = self.__get_filename(out[0])
-            op = open('AVL/Output/{}'.format(file)).read().split('\n')
+            op = open('AVLWrapper/AVL/Output/{}'.format(file)).read().split('\n')
             for l in op:
                 if f' {out[1]} ' in l:
                     l = l.split()
@@ -196,15 +196,15 @@ class ADaX():
         """
         \nSaves all three outputs
         """
-        self.input('st AVL/Output/Stability derivatives')
+        self.input('st AVLWrapper/AVL/Output/Stability derivatives')
         self.input('o')
-        self.input('ft AVL/Output/Total forces')
+        self.input('ft AVLWrapper/AVL/Output/Total forces')
         self.input('o')
-        self.input('sb AVL/Output/Body-axis derivatives')
+        self.input('sb AVLWrapper/AVL/Output/Body-axis derivatives')
         self.input('o')
-        self.input('fn AVL/Output/Surface forces')
+        self.input('fn AVLWrapper/AVL/Output/Surface forces')
         self.input('o')
-        self.input('fs AVL/Output/Strip forces')
+        self.input('fs AVLWrapper/AVL/Output/Strip forces')
         self.input('o')
 
 
@@ -224,7 +224,7 @@ class ADaX():
         run_filename = run_filename.strip()
         if not run_filename.endswith('.run'): run_filename += '.run'
         self.input('f')
-        self.input('AVL/Planes/{0}'.format(run_filename))
+        self.input('AVLWrapper/AVL/Planes/{0}'.format(run_filename))
         self.input(case_number)
         self.input('c1\n')
 
@@ -237,7 +237,7 @@ class ADaX():
         self.sp = subprocess.Popen('avl.exe',
                                    shell=False,
                                    stdin=subprocess.PIPE,
-                                   stdout=open('Log.txt', 'w'), 
+                                   stdout=open('AVLWrapper/Log.txt', 'w'), 
                                    stderr=subprocess.PIPE)
         self.sp.stdin.write(self.__inputlist.encode('utf-8'))
         self.sp.stdin.flush()
@@ -330,7 +330,7 @@ class ADaX():
         """
         self.output_config(['t Alpha', 't CLtot', 't CDind', 't Elevator'])
         polar_dict = self.sweep(vc='a a', v_array=a_array, executes=[('vcv', trim)])
-        f = open('AVL/Output/Invis Polar.dat', 'w')
+        f = open('AVLWrapper/AVL/Output/Invis Polar.dat', 'w')
         f.write('{:>20}  {:>20}  {:>20}  {:>20}\n'.format('Alpha', 'CLtot', 'CDind', 'Elevator'))
         f.write('{:>20}  {:>20}  {:>20}  {:>20}\n'.format('-'*20, '-'*20, '-'*20, '-'*20))
         for k, val in polar_dict.items():
@@ -363,7 +363,7 @@ class ADaX():
             adsub._x()
             adsub._save()
             adsub.run(print_output=False)
-            content = open('AVL/Output/Strip forces').readlines()
+            content = open('AVLWrapper/AVL/Output/Strip forces').readlines()
             cl = []
             for i, line in enumerate(content):
                 if ' j ' in line:
@@ -523,7 +523,7 @@ class des_plane(des_obj):
             print('[Geometry] Using reference surface {} to update reference values'.format(self.__reference))
             self.__reference.calculate_reference_values()
             self.assign(Sref=self.__reference.Sref, bref=self.__reference.bref, cref=self.__reference.Cref)
-        f = open('AVL/Planes/{0}.avl'.format(filename), 'w')
+        f = open('AVLWrapper/AVL/Planes/{0}.avl'.format(filename), 'w')
         self.config_to_avl(f)
         for sf in self.surfs:
             f.write('#' + '='*width + '\n#' + '='*width + '\nSURFACE\n')
@@ -715,7 +715,7 @@ class Case_Maker:
         """
         self.__existing_run = {}
         try:
-            contents = open('AVL/Planes/{}'.format(self.__runfile), 'r').readlines()
+            contents = open('AVLWrapper/AVL/Planes/{}'.format(self.__runfile), 'r').readlines()
         except: 
             return
         line_break_indices = []
@@ -804,7 +804,7 @@ class Case_Maker:
         \nTakes nothing, returns nothing
         """
         print("[CaseMaker] Begin writing AVL/Planes/{}".format(self.__runfile))
-        with open('AVL/Planes/{}'.format(self.__runfile), 'w') as f:
+        with open('AVLWrapper/AVL/Planes/{}'.format(self.__runfile), 'w') as f:
             for existing_case_name, existing_case_list in self.__existing_run.items():
                 for line in existing_case_list:
                     f.write(line)
@@ -856,10 +856,10 @@ class Case_Maker:
         ad._oper()
         ad._x()
         ad.input('s')
-        ad.input('AVL/Output/Default run.run')
+        ad.input('AVLWrapper/AVL/Output/Default run.run')
         ad.input('y')
         ad.run(print_output=False)
-        contents = open('AVL/Output/Default run.run').readlines()
+        contents = open('AVLWrapper/AVL/Output/Default run.run').readlines()
         basket = []
         for item in shopping_list:
             for line in contents:
@@ -884,7 +884,7 @@ class Case_Maker:
         ad._x()
         ad._save()
         ad.run(print_output=False)
-        contents = open('AVL/Output/Total forces').read()
+        contents = open('AVLWrapper/AVL/Output/Total forces').read()
         contents = contents.split('Trefftz')[1].split('\n')[3:]
         i = 0
         line = contents[i]

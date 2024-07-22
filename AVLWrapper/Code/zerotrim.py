@@ -19,10 +19,10 @@ Xcg = 0.05
 #tail_zerotrim(mac, 0.03, V_ht = 0.43, l = 0.77)
 ad = ADaX(planename='Junitaper.avl')
 ad.output_config(['t CLtot', 's Xnp', 't Elevator', 't Cref'])
-ad._load(); ad._oper()
+ad._load(); ad._oper(); 
 ad.vcv('d1 pm 0'); ad.vcv('d2 ym 0'); ad.vcv('a a 0')
-ad._x(); ad._save()
-#ad.run(print_output = True)
+ad._x(); ad._save(); 
+ad.run(print_output = True)
 results = ad.run(print_output=False)
 Xnp = float(results['Xnp'])
 elv = float(results['Elevator'])
