@@ -26,15 +26,6 @@
   .PLOP    Plotting options
    NAME s  Specify new configuration name
 
- AVL   c>   F    command not recognized.  Type a "?" for list
-
- AVL   c>   AVLW command not recognized.  Type a "?" for list
-
- AVL   c>   1    command not recognized.  Type a "?" for list
-
- AVL   c>   C    command not recognized.  Type a "?" for list
-
- AVL   c>  
  AVL   c>  
  AVL   c>  
  AVL   c>  
@@ -231,8 +222,8 @@
   Building bound-vortex velocity matrix...
 
  iter d(alpha)   d(beta)    d(pb/2V)   d(qc/2V)   d(rb/2V)   Elevator   Rudder     
-   1 -0.204E-45 -0.000E+00  0.126E-30 -0.483E-49 -0.785E-33 -0.783E+01 -0.171E-13
-   2 -0.441E-31 -0.000E+00 -0.126E-30  0.124E-33  0.691E-33  0.843E-15  0.886E-16
+   1 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.761E+01 -0.115E-13
+   2  0.168E-63 -0.000E+00 -0.000E+00  0.291E-50  0.980E-34 -0.344E-14  0.165E-15
  ---------------------------------------------------------------
  Vortex Lattice Output -- Total Forces
 
@@ -241,28 +232,28 @@
      # Strips   =  98
      # Vortices = 784
 
-  Sref =  654.55       Cref =  11.084       Bref =  62.668    
+  Sref =  578.71       Cref =  10.422       Bref =  58.926    
   Xref =  0.0000       Yref =  0.0000       Zref =  0.0000    
 
  Standard axis orientation,  X fwd, Z down         
 
  Run case:  -unnamed-                              
 
-  Alpha =  -0.00000     pb/2V =  -0.00000     p'b/2V =  -0.00000
+  Alpha =   0.00000     pb/2V =  -0.00000     p'b/2V =  -0.00000
   Beta  =   0.00000     qc/2V =   0.00000
-  Mach  =     0.000     rb/2V =   0.00000     r'b/2V =   0.00000
+  Mach  =     0.000     rb/2V =  -0.00000     r'b/2V =  -0.00000
 
-  CXtot =  -0.00261     Cltot =   0.00000     Cl'tot =   0.00000
+  CXtot =  -0.00276     Cltot =   0.00000     Cl'tot =   0.00000
   CYtot =  -0.00000     Cmtot =   0.00000
-  CZtot =  -0.14433     Cntot =  -0.00000     Cn'tot =  -0.00000
+  CZtot =  -0.15036     Cntot =  -0.00000     Cn'tot =  -0.00000
 
-  CLtot =   0.14433
-  CDtot =   0.00261
-  CDvis =   0.00000     CDind = 0.0026085
-  CLff  =   0.14433     CDff  = 0.0039910    | Trefftz
-  CYff  =  -0.00000         e =    0.2769    | Plane  
+  CLtot =   0.15036
+  CDtot =   0.00276
+  CDvis =   0.00000     CDind = 0.0027551
+  CLff  =   0.15036     CDff  = 0.0024918    | Trefftz
+  CYff  =   0.00000         e =    0.4813    | Plane  
 
-   Elevator        =  -7.83440
+   Elevator        =  -7.61304
    Rudder          =  -0.00000
 
  ---------------------------------------------------------------

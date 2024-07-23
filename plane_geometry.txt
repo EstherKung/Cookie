@@ -1,0 +1,30 @@
+
+static margin: 5.2%, CG @ 29.6% chord.
+MTOW estimate =  4.35 lbs.
+
+Fuselage Definitions: Total Length  48.03 in.
+
+	Nose Section:	 8.0000 in.
+	Main Section:	 16.0300 in.
+	Aft Section:	 24.0000 in.
+
+Wing Definitions: (in.)
+
+	Wingspan:	 58.93
+	Root chord:	 14.03
+	Tip chord:	 5.61
+	LE sweep:	 0.92 deg.
+
+Empennage Definitions: (in.)
+
+	hstab:
+	chord	 4.8496
+	span	 19.3985
+	vstab:
+	chord	5.1324
+	span	 7.6985
+
+Landing Gear Placement: (dist. from nose, in.)
+
+	NLG:	 8.0000
+	MLG:	 19.2423

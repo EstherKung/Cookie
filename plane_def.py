@@ -90,7 +90,7 @@ class Component:
                 t = this.cfg['t']
                 this.FF = 1 + 2 * t + 60 * t ** 4
             case 'fuse':
-                l = this.l - l_n - l_t
+                l = this.l - l_n - l_t #maybe we don't need to subtract?
                 ld = l/this.d
                 this.FF = 1 + 2.8 * (ld ** -1.5) + 3.8 * (ld ** -3)
     
@@ -170,7 +170,6 @@ class Fuselage(Component):
         else: this.b2 = this.b1
         this.length = length
         
- 
     def geometry(this):
         x = [this.x, this.x + this.length,
              this.x + this.length, this.x]
