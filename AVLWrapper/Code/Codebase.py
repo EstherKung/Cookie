@@ -517,10 +517,10 @@ class des_plane(des_obj):
         """
         Begin writing the geometry to .avl file
         """
-        print('[Geometry] Begin writing geometry to AVL/Planes/{0}.avl'.format(filename))
+        #print('[Geometry] Begin writing geometry to AVL/Planes/{0}.avl'.format(filename))
         width = 95
         if self.__reference:
-            print('[Geometry] Using reference surface {} to update reference values'.format(self.__reference))
+            #print('[Geometry] Using reference surface {} to update reference values'.format(self.__reference))
             self.__reference.calculate_reference_values()
             self.assign(Sref=self.__reference.Sref, bref=self.__reference.bref, cref=self.__reference.Cref)
         f = open('AVLWrapper/AVL/Planes/{0}.avl'.format(filename), 'w')
@@ -534,7 +534,8 @@ class des_plane(des_obj):
                 for ct in sc.ctrls:
                     f.write('\nCONTROL\n')
                     ct.config_to_avl(f)
-        print('[Geometry] Finished writing geometry to AVL/Planes/{0}.avl'.format(filename))
+        #print('[Geometry] Finished writing geometry to AVL/Planes/{0}.avl'.format(filename))
+        print('AVL geometry updated')
 
     def use_reference(self, reference_surface):
         """

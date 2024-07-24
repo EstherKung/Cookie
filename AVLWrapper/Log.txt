@@ -222,8 +222,8 @@
   Building bound-vortex velocity matrix...
 
  iter d(alpha)   d(beta)    d(pb/2V)   d(qc/2V)   d(rb/2V)   Elevator   Rudder     
-   1 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.761E+01 -0.115E-13
-   2  0.168E-63 -0.000E+00 -0.000E+00  0.291E-50  0.980E-34 -0.344E-14  0.165E-15
+   1  0.113E-15 -0.000E+00 -0.692E-32  0.112E-17  0.505E-32 -0.698E+01 -0.281E-14
+   2 -0.113E-15 -0.000E+00  0.695E-32 -0.112E-17 -0.506E-32 -0.596E-14 -0.420E-16
  ---------------------------------------------------------------
  Vortex Lattice Output -- Total Forces
 
@@ -232,28 +232,28 @@
      # Strips   =  98
      # Vortices = 784
 
-  Sref =  578.71       Cref =  10.422       Bref =  58.926    
+  Sref =  505.17       Cref =  9.7377       Bref =  55.055    
   Xref =  0.0000       Yref =  0.0000       Zref =  0.0000    
 
  Standard axis orientation,  X fwd, Z down         
 
  Run case:  -unnamed-                              
 
-  Alpha =   0.00000     pb/2V =  -0.00000     p'b/2V =  -0.00000
+  Alpha =  -0.00000     pb/2V =  -0.00000     p'b/2V =  -0.00000
   Beta  =   0.00000     qc/2V =   0.00000
-  Mach  =     0.000     rb/2V =  -0.00000     r'b/2V =  -0.00000
+  Mach  =     0.000     rb/2V =   0.00000     r'b/2V =   0.00000
 
-  CXtot =  -0.00276     Cltot =   0.00000     Cl'tot =   0.00000
-  CYtot =  -0.00000     Cmtot =   0.00000
-  CZtot =  -0.15036     Cntot =  -0.00000     Cn'tot =  -0.00000
+  CXtot =  -0.00223     Cltot =  -0.00000     Cl'tot =  -0.00000
+  CYtot =   0.00000     Cmtot =   0.00000
+  CZtot =  -0.14648     Cntot =   0.00000     Cn'tot =   0.00000
 
-  CLtot =   0.15036
-  CDtot =   0.00276
-  CDvis =   0.00000     CDind = 0.0027551
-  CLff  =   0.15036     CDff  = 0.0024918    | Trefftz
-  CYff  =   0.00000         e =    0.4813    | Plane  
+  CLtot =   0.14648
+  CDtot =   0.00223
+  CDvis =   0.00000     CDind = 0.0022301
+  CLff  =   0.14648     CDff  = 0.0053817    | Trefftz
+  CYff  =   0.00000         e =    0.2115    | Plane  
 
-   Elevator        =  -7.61304
+   Elevator        =  -6.97511
    Rudder          =  -0.00000
 
  ---------------------------------------------------------------

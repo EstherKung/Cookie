@@ -30,7 +30,7 @@ def aircraft_geometry(fname: str,
                          Chord=pf['cr'], Ainc=ang['inc'], 
                          AFILE=afs['main'])
     wingsec200 = des_sec(wing, 
-                         Xle=pf['b']/2*np.tan(np.pi/2 - ang['sweep']), 
+                         Xle=pf['b']/2*np.tan(ang['sweep']), 
                          Yle=pf['b']/2, 
                          Zle=pf['b']/2*np.tan(ang['dihedral']), 
                          Chord=pf['ct'], 

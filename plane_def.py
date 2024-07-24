@@ -120,7 +120,7 @@ class Wing(Component):
         this.planform['AR'], this.planform['b'], this.planform['S'], this.planform['tr'], this.planform['cr'], this.planform['ct'] = planform(param)
 
         #print(this.planform)
-        if angles[0] == -1: this.angles['sweep'] = np.arctan(0.125*this.planform['b']*this.planform['cr']*(1-this.planform['tr'])) #for quarter no sweep
+        if angles[0] == -1: this.angles['sweep'] = np.arctan(0.5*this.planform['cr']*(1-this.planform['tr'])/this.planform['b']) #for quarter no sweep
         else: this.angles['sweep'] = np.radians(angles[0]); #leading edge sweep
         this.angles['dihedral'] = np.radians(angles[1]); this.angles['inc'] = angles[2]; this.angles['tw'] = angles[3]
         #to find mass
@@ -135,11 +135,11 @@ class Wing(Component):
     
     def geometry(this):
         x = [this.x,
-             this.x + this.planform['b']/2 *np.tan(np.pi/2 - this.angles['sweep']),
-             this.x + this.planform['b']/2 * np.tan(np.pi/2 - this.angles['sweep']) + this.planform['ct'],
+             this.x + this.planform['b']/2 *np.tan(this.angles['sweep']),
+             this.x + this.planform['b']/2 * np.tan(this.angles['sweep']) + this.planform['ct'],
              this.x + this.planform['cr'],
-             this.x + this.planform['b']/2 *np.tan(np.pi/2 - this.angles['sweep']) + this.planform['ct'],
-             this.x + this.planform['b']/2 * np.tan(np.pi/2 - this.angles['sweep'])]
+             this.x + this.planform['b']/2 *np.tan(this.angles['sweep']) + this.planform['ct'],
+             this.x + this.planform['b']/2 * np.tan(this.angles['sweep'])]
         y = [0,
              this.planform['b']/2, this.planform['b']/2,
              0,
@@ -267,5 +267,3 @@ class Plane():
             cd_tot = cd_tot + component.drag_visc(u, this.Sref)
         D = 0.5 * rho * u **2 * this.Sref * cd_tot
         return D
-
-
