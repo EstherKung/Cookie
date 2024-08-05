@@ -76,9 +76,19 @@ print(f"initial MTOW = {MTOW: 1.2f} lbs.")
 
 "Tail Volume Coefficients & AR-----------------------------"
 AR = 6; tr = 0.4; 
-ARh = 4; V_h = 0.40; 
+ARh = 3; V_h = 0.40; 
 ARv = 1.5; V_v = 0.04; 
 "----------------------------------------------------------"
+
+"Default Components on Plane-------------------------------"
+batt = Component(4, "battery", point_mass = True)
+Rx = Component(4, "Rx", point_mass = True)
+Rx_batt = Component(8, "Rx batt", point_mass = True)
+ESC = Component(4, "ESC", point_mass = True)
+prop = Component(0, "prop", point_mass = True)
+motor = Component(1, "motor", point_mass = True)
+"----------------------------------------------------------"
+
 
 #Routine Setup--------------------------------------------||
 S =  MTOW / WS
@@ -115,7 +125,7 @@ while res > 1e-3:
     NLG = LandingGear(fuse_main.x, "NLG", point_mass = True)
     MLG = LandingGear(CG + 0.1*total_length, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
 
-    emp_xloc = fuse_aft.x + fuse_aft.length #assuming empennage plate starts where the fuselage ends
+    emp_xloc = fuse_aft.x + fuse_aft.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
     l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail
     S_h = V_h * S * wing.planform['cr'] / l_emp #that c is the mac
     S_v = V_v * S * wing.planform['b'] / l_emp
@@ -123,15 +133,10 @@ while res > 1e-3:
     htail = Component(emp_xloc, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab')
     vtail = Component(emp_xloc, "balsa", type = 'area', AR = ARv, area = S_v, aero = 'vstab')
 
-    batt = Component(fuse_main.x, "battery", point_mass = True)
-    ESC = Component(4, "ESC", point_mass = True)
-    prop = Component(0, "prop", point_mass = True)
-    motor = Component(1, "motor", point_mass = True)
-
     components = [fuse_nose, fuse_main, fuse_aft,
                 NLG, MLG, 
                 wing, htail, vtail,
-                batt, ESC, prop, motor]
+                batt, ESC, prop, motor, Rx, Rx_batt]
 
     Trainer = Plane("Trainer", components, Sref = S)
     Trainer.plane_plot(components) #plane plot
@@ -202,7 +207,7 @@ while sm_lower < static_margin > sm_upper:
     components = [fuse_nose, fuse_main, fuse_aft,
                 NLG, MLG, 
                 wing, htail, vtail,
-                batt, ESC, prop, motor]
+                batt, ESC, prop, motor, Rx, Rx_batt]
     Trainer = Plane("Trainer", components, Sref = S)
     Trainer.plane_plot(components) #plane plot
     CG, mtot = Trainer.CG_tally()

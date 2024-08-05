@@ -11,7 +11,9 @@ def materials(des: str, relative = False):
             case "NLG": return 0.0084984484 #slugs
             case "MLG": return 0.01739492332 #slugs
 
-            case "prop": return  0.002055654 #g // motor + esc + prop, we have 2
+            case "prop": return  0.0031469472 #slugs
             case "battery": return  0.022269585 #slugs
             case "ESC": return 0.0045909606 #slugs
             case "motor": return 0.01305402 #slugs
+            case "Rx batt": return 0.009593052 #slugs
+            case "Rx": return 0.000000 #slugs
