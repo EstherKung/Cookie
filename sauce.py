@@ -4,6 +4,7 @@ import pandas as pd
 from wing_def import *
 from plane_def import *
 from AVLWrapper.Code.Codebase import *
+from LG_def import *
  
 w = 0; 
 def avl_sm(plane: Plane):
@@ -34,12 +35,14 @@ def CG_routine(wing_loc, CG):
     fuse_aft = Fuselage(fuse_main.x + fuse_main.length, "aft", aft_sec, [6, 6], [2, 2])
 
     total_length = fuse_nose.length + fuse_main.length + fuse_aft.length
-    NLG = LandingGear(fuse_main.x, "NLG", point_mass = True)
-    MLG = LandingGear(CG + 0.1*total_length, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
+    LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
+    print(NLG_fwd_wheel)
+    NLG = LandingGear(CG - NLG_fwd_wheel, "NLG", point_mass = True)
+    MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
 
     emp_xloc = fuse_aft.x + fuse_aft.length #assuming empennage plate starts where the fuselage ends
     l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail
-    S_h = V_h * S * wing.planform['cr'] / l_emp #that c is the mac
+    S_h = V_h * S * wing.planform['cr'] / l_emp #that c is the mac, supposedly
     S_v = V_v * S * wing.planform['b'] / l_emp
 
     htail = Component(emp_xloc, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab')
@@ -97,7 +100,10 @@ wing = Wing(wing_loc, "foam",
             [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
 #initially assume CG @ half root chord behind the wing
 CG = wing.x + wing.planform['cr']/2
-aft_sec = 24 #start with aft fuselage length = 24 in. 
+aft_sec = 24 #start with aft fuselage length = 24 in.
+S_h = V_h * wing.planform['S'] * wing.planform['cr'] / aft_sec
+htail = Component(aft_sec, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab') #dummy htail for loop to work
+
 #--------------------------------------------------------||
 
 
@@ -122,8 +128,11 @@ while res > 1e-3:
     fuse_aft = Fuselage(fuse_main.x + fuse_main.length, "aft", aft_sec, [6, 6], [2, 2])
 
     total_length = fuse_nose.length + fuse_main.length + fuse_aft.length
-    NLG = LandingGear(fuse_main.x, "NLG", point_mass = True)
-    MLG = LandingGear(CG + 0.1*total_length, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
+
+    LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
+    
+    NLG = LandingGear(CG - NLG_fwd_wheel, "NLG", point_mass = True)
+    MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
 
     emp_xloc = fuse_aft.x + fuse_aft.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
     l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail
@@ -194,8 +203,10 @@ while sm_lower < static_margin > sm_upper:
     fuse_aft = Fuselage(fuse_main.x + fuse_main.length, "aft", aft_sec, [6, 6], [2, 2])
 
     total_length = fuse_nose.length + fuse_main.length + fuse_aft.length
-    NLG = LandingGear(fuse_main.x, "NLG", point_mass = True)
-    MLG = LandingGear(CG + 0.1*total_length, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
+    LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
+    
+    NLG = LandingGear(CG - NLG_fwd_wheel, "NLG", point_mass = True)
+    MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
 
     emp_xloc = fuse_aft.x + fuse_aft.length #assuming empennage plate starts where the fuselage ends
     l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail

@@ -1,31 +1,31 @@
 [Results]
-static margin: 8.1%, CG @ 27.5% chord.
-MTOW estimate =  4.26 lbs.
-Planform Area S =  509.6145
+static margin: 12.7%, CG @ 27.2% chord.
+MTOW estimate =  4.17 lbs.
+Planform Area S =  550.2691
 
-Fuselage Definitions: Total Length  45.97 in.
+Fuselage Definitions: Total Length  42.78 in.
 
 	Nose Section:	 8.0000 in.
-	Main Section:	 13.5658 in.
-	Aft Section:	 23.8000 in.
+	Main Section:	 11.5809 in.
+	Aft Section:	 23.1000 in.
 
-Wing Definitions: Location from nose: 8.40 (in.)
+Wing Definitions: Location from nose: 5.90 (in.)
 
-	Wingspan:	 55.30
-	Root chord:	 13.17
-	Tip chord:	 5.27
+	Wingspan:	 57.46
+	Root chord:	 13.68
+	Tip chord:	 5.47
 	LE sweep:	 4.09 deg.
 
 Empennage Definitions: (in.)
 
 	hstab:
-	chord	 5.1542
-	span	 15.4627
+	chord	 5.4853
+	span	 16.4558
 	vstab:
-	chord	4.7239
-	span	 7.0859
+	chord	5.0273
+	span	 7.5410
 
 Landing Gear Placement: (dist. from nose, in.)
 
-	NLG:	 8.0000
-	MLG:	 16.5853
+	NLG:	-10.4373
+	MLG:	 11.7617
