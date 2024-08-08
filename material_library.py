@@ -16,4 +16,4 @@ def materials(des: str, relative = False):
             case "ESC": return 0.0045909606 #slugs
             case "motor": return 0.01305402 #slugs
             case "Rx batt": return 0.009593052 #slugs
-            case "Rx": return 0.000000 #slugs
+            case "Rx": return 0.0009593052 #slugs

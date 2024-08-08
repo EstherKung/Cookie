@@ -38,15 +38,15 @@ def nearest(xloc, des: str, xcoords, ycoords): #returns the x, y value pair for 
 def csec(afile):
     data = pd.read_table(afile,
                          sep='\s+',skiprows=[0],names=['x','y'],index_col=False)
-    area = np.trapezoid(data['y'], data['x'])
+    area = np.trapz(data['y'], data['x'])
     return(abs(area))
 
 def centroid(afile):
     data = pd.read_table(afile,
                         sep='\s+', skiprows=[0],names =['x','y'], index_col=False)
 
-    loc = np.trapezoid(data['y']*data['x'], data['x'])
-    weight = np.trapezoid(data['y'], data['x'])
+    loc = np.trapz(data['y']*data['x'], data['x'])
+    weight = np.trapz(data['y'], data['x'])
     centroid = loc/weight
     return(centroid)
 

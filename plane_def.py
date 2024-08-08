@@ -127,9 +127,9 @@ class Wing(Component):
         x = np.linspace(0, this.planform['b']/2, 50) #your discretisation wooo
         xsec = csec(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
         #print(xsec)
-        this.mass = this.material * 2 * np.trapezoid(xsec, x)   
+        this.mass = this.material * 2 * np.trapz(xsec, x)   
         xcentroid = centroid(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
-        this.x_cg = np.trapezoid(xcentroid, x)/ (0.5 * this.planform['b']) #this is like average value theorem
+        this.x_cg = np.trapz(xcentroid, x)/ (0.5 * this.planform['b']) #this is like average value theorem
 
         this.thickness = thickness(afile) #technically this is the thickness-to-chord, since dat file normalised it with c = 1
     

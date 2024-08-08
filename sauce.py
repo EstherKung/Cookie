@@ -24,7 +24,7 @@ def avl_sm(plane: Plane):
 
     return sm(Xnp, CG, mac), CG_chord, mac
 
-def CG_routine(wing_loc, CG):
+def CG_routine(wing_loc, CG): #tallies up the CG of the new configuration
     global wing, fuse_nose, fuse_main, fuse_aft, NLG, MLG, htail, vtail
     wing = Wing(wing_loc, "foam", [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
     fuse_nose = Fuselage(0, "nose", 8, [3, 3], [6, 6])
@@ -36,11 +36,11 @@ def CG_routine(wing_loc, CG):
 
     total_length = fuse_nose.length + fuse_main.length + fuse_aft.length
     LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
-    print(NLG_fwd_wheel)
+
     NLG = LandingGear(CG - NLG_fwd_wheel, "NLG", point_mass = True)
     MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
 
-    emp_xloc = fuse_aft.x + fuse_aft.length #assuming empennage plate starts where the fuselage ends
+    emp_xloc = fuse_aft.x + fuse_aft.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
     l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail
     S_h = V_h * S * wing.planform['cr'] / l_emp #that c is the mac, supposedly
     S_v = V_v * S * wing.planform['b'] / l_emp
@@ -59,7 +59,7 @@ def CG_routine(wing_loc, CG):
     #print(f"CG @ {CG_chord:1.1%} chord. ")
     return Trainer, CG_chord
 
-afile = "C:\\Users\\eneiche\\Documents\\airfoil-sauce\\airfoil_library\\Selig\\S7055.dat"
+afile = "airfoil_library/S4233.dat"
 
 "Point on Constraint Diagram-------------------------------"
 TW = 0.2046                                          #lb/lb--
@@ -79,7 +79,7 @@ print(f"initial MTOW = {MTOW: 1.2f} lbs.")
 
 "Tail Volume Coefficients & AR-----------------------------"
 AR = 6; tr = 0.4; 
-ARh = 3; V_h = 0.40; 
+ARh = 0.5*AR; V_h = 0.40; 
 ARv = 1.5; V_v = 0.04; 
 "----------------------------------------------------------"
 
@@ -95,7 +95,7 @@ motor = Component(1, "motor", point_mass = True)
 
 #Routine Setup--------------------------------------------||
 S =  MTOW / WS
-wing_loc = 12; 
+wing_loc = 24; 
 wing = Wing(wing_loc, "foam", 
             [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
 #initially assume CG @ half root chord behind the wing
@@ -117,7 +117,7 @@ while res > 1e-3:
     MTOW_old = MTOW
     S =  MTOW / WS
 
-    wing_loc = 12; #this has to be iterated for CG placment in second iteration
+    wing_loc = 24; #this has to be iterated for CG placment in second iteration
     wing = Wing(wing_loc, "foam", [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
 
     fuse_nose = Fuselage(0, "nose", 8, [3, 3], [6, 6])
@@ -208,7 +208,7 @@ while sm_lower < static_margin > sm_upper:
     NLG = LandingGear(CG - NLG_fwd_wheel, "NLG", point_mass = True)
     MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
 
-    emp_xloc = fuse_aft.x + fuse_aft.length #assuming empennage plate starts where the fuselage ends
+    emp_xloc = fuse_aft.x + fuse_aft.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
     l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail
     S_h = V_h * S * wing.planform['cr']/ l_emp #that c is supposed to be the mac but it looks tiny with the mac ??
     S_v = V_v * S * wing.planform['b'] / l_emp
@@ -263,4 +263,5 @@ Landing Gear Placement: (dist. from nose, in.)\n
 export.close()
 out = open("plane_geometry.txt")
 print(out.read())
+print(CG)
 #plt.show()
