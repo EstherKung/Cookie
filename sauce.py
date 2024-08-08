@@ -18,14 +18,14 @@ def avl_sm(plane: Plane):
     ad._x(); ad._save()
     results = ad.run(print_output=False)
     Xnp = float(results['Xnp']); mac = float(results['Cref']); 
-    plt.plot(Xnp, 0, 'x')
+    plt.plot(Xnp, 0, 'x', color ='tab:orange')
 
     CG_chord = (CG - wing.x)/ wing.planform['cr']
 
     return sm(Xnp, CG, mac), CG_chord, mac
 
-def CG_routine(wing_loc, CG): #tallies up the CG of the new configuration
-    global wing, fuse_nose, fuse_main, fuse_aft, NLG, MLG, htail, vtail
+def CG_routine(CG, MTOW, wing_loc, aft_sec): #tallies up the CG of the new configuration
+    global wing, fuse_nose, fuse_main, fuse_aft, NLG, MLG, htail, vtail, total_length
     wing = Wing(wing_loc, "foam", [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
     fuse_nose = Fuselage(0, "nose", 8, [3, 3], [6, 6])
 
@@ -37,7 +37,7 @@ def CG_routine(wing_loc, CG): #tallies up the CG of the new configuration
     total_length = fuse_nose.length + fuse_main.length + fuse_aft.length
     LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
 
-    NLG = LandingGear(CG - NLG_fwd_wheel, "NLG", point_mass = True)
+    NLG = LandingGear(CG - NLG_fwd_strut, "NLG", point_mass = True)
     MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
 
     emp_xloc = fuse_aft.x + fuse_aft.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
@@ -52,12 +52,17 @@ def CG_routine(wing_loc, CG): #tallies up the CG of the new configuration
                 NLG, MLG, 
                 wing, htail, vtail,
                 batt, ESC, prop, motor]
+    
+    print(NLG.x)
 
-    Trainer = Plane("Trainer", components, Sref = S)
+    Trainer = Plane("Trainer", components, Sref = S) #collect all component into one plane
 
-    CG_chord = (CG - wing.x)/ wing.planform['cr'] 
+    CG_new, mtot = Trainer.CG_tally()
+    MTOW = Trainer.MTOW_tally()
+
+    CG_chord = (CG - wing.x)/ wing.planform['cr']
     #print(f"CG @ {CG_chord:1.1%} chord. ")
-    return Trainer, CG_chord
+    return Trainer, MTOW, CG_new, CG_chord
 
 afile = "airfoil_library/S4233.dat"
 
@@ -116,46 +121,13 @@ print(
 while res > 1e-3: 
     MTOW_old = MTOW
     S =  MTOW / WS
+    CG_old = CG
 
-    wing_loc = 24; #this has to be iterated for CG placment in second iteration
-    wing = Wing(wing_loc, "foam", [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
-
-    fuse_nose = Fuselage(0, "nose", 8, [3, 3], [6, 6])
-
-    #making the main fuselage section end where the wing ends
-    main_end = wing_loc + wing.planform['cr'] - fuse_nose.length
-    fuse_main = Fuselage(fuse_nose.length, "main", main_end, [6, 6])
-    fuse_aft = Fuselage(fuse_main.x + fuse_main.length, "aft", aft_sec, [6, 6], [2, 2])
-
-    total_length = fuse_nose.length + fuse_main.length + fuse_aft.length
-
-    LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
-    
-    NLG = LandingGear(CG - NLG_fwd_wheel, "NLG", point_mass = True)
-    MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
-
-    emp_xloc = fuse_aft.x + fuse_aft.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
-    l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail
-    S_h = V_h * S * wing.planform['cr'] / l_emp #that c is the mac
-    S_v = V_v * S * wing.planform['b'] / l_emp
-
-    htail = Component(emp_xloc, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab')
-    vtail = Component(emp_xloc, "balsa", type = 'area', AR = ARv, area = S_v, aero = 'vstab')
-
-    components = [fuse_nose, fuse_main, fuse_aft,
-                NLG, MLG, 
-                wing, htail, vtail,
-                batt, ESC, prop, motor, Rx, Rx_batt]
-
-    Trainer = Plane("Trainer", components, Sref = S)
-    Trainer.plane_plot(components) #plane plot
-
-    CG, mtot = Trainer.CG_tally()
-    MTOW = Trainer.MTOW_tally()
-    #print(f"MTOW = {MTOW: 1.2f} lbs.")
+    Trainer, MTOW, CG, CG_chord = CG_routine(CG_old, MTOW_old, wing_loc, aft_sec)
+    #Trainer.plane_plot(Trainer.components)
+    #plt.plot(CG, 0, 'x', color='tab:blue')
 
     res = abs(MTOW_old - MTOW)
-    #print(res)
 print(f"Mass Convergence Study Done. MTOW = {MTOW: 1.2f} lbs.")
 
 #CG Placement Study by varying wing placement
@@ -164,7 +136,7 @@ CG_chord = (CG - wing.x)/ wing.planform['cr']
 
 #---Configure upper & Lower Limits---
 CG_upper = 0.35                    #
-CG_lower = 0.27                    #
+CG_lower = 0.30                    #
 #------------------------------------
 
 
@@ -175,10 +147,9 @@ while  CG_chord < CG_lower or CG_chord > CG_upper:
     if CG_chord_old < CG_lower:
         wing_loc -= 1
     
-    Trainer, CG_chord = CG_routine(wing_loc, CG)
+    Trainer, MTOW, CG, CG_chord = CG_routine(CG, MTOW, wing_loc, aft_sec)
     Trainer.plane_plot(Trainer.components)
-    CG, mtot = Trainer.CG_tally()
-    MTOW = Trainer.MTOW_tally()
+    plt.plot(CG, 0, 'x', color='tab:blue')
 
     plt.savefig(f"iteration/{w}.png"); w += 1; 
 print(f"CG Placement Study done. CG @ {CG_chord:1.1%} chord; MTOW = {MTOW: 1.2f} lbs.")
@@ -188,7 +159,7 @@ static_margin, CG_chord, mac = avl_sm(Trainer)
 
 #Configure upper & lower limits-------
 sm_upper = 0.15
-sm_lower = 0.07
+sm_lower = 0.10
 #-------------------------------------
 
 while sm_lower < static_margin > sm_upper:
@@ -200,29 +171,11 @@ while sm_lower < static_margin > sm_upper:
         aft_sec -= 0.1 #decrease empennage length
         #V_h -= 0.001 #decrease hstab size - change volume coeff, hold off for now
         pass
-    fuse_aft = Fuselage(fuse_main.x + fuse_main.length, "aft", aft_sec, [6, 6], [2, 2])
-
-    total_length = fuse_nose.length + fuse_main.length + fuse_aft.length
-    LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
     
-    NLG = LandingGear(CG - NLG_fwd_wheel, "NLG", point_mass = True)
-    MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) #MLG 10% of the total length behind the CG location
+    Trainer, MTOW, CG, CG_chord = CG_routine(CG, MTOW, wing_loc, aft_sec)
+    Trainer.plane_plot(Trainer.components)
+    plt.plot(CG, 0, 'x', color='tab:blue')
 
-    emp_xloc = fuse_aft.x + fuse_aft.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
-    l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail
-    S_h = V_h * S * wing.planform['cr']/ l_emp #that c is supposed to be the mac but it looks tiny with the mac ??
-    S_v = V_v * S * wing.planform['b'] / l_emp
-
-    htail = Component(emp_xloc, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab')
-    vtail = Component(emp_xloc, "balsa", type = 'area', AR = ARv, area = S_v, aero = 'vstab')
-    components = [fuse_nose, fuse_main, fuse_aft,
-                NLG, MLG, 
-                wing, htail, vtail,
-                batt, ESC, prop, motor, Rx, Rx_batt]
-    Trainer = Plane("Trainer", components, Sref = S)
-    Trainer.plane_plot(components) #plane plot
-    CG, mtot = Trainer.CG_tally()
-    MTOW = Trainer.MTOW_tally()
     static_margin, CG_chord, mac = avl_sm(Trainer)
     plt.savefig(f"iteration/{w}.png"); w += 1; 
 
@@ -237,10 +190,10 @@ while  CG_chord < CG_lower or CG_chord > CG_upper:
     if CG_chord_old < CG_lower:
         wing_loc -= 0.1
 
-    Trainer, CG_chord = CG_routine(wing_loc, CG)
-    Trainer.plane_plot(Trainer.components) #plane plot
-    CG, mtot = Trainer.CG_tally()
-    MTOW = Trainer.MTOW_tally()
+    Trainer, MTOW, CG, CG_chord = CG_routine(CG, MTOW, wing_loc, aft_sec)
+    Trainer.plane_plot(Trainer.components)
+    plt.plot(CG, 0, 'x', color='tab:blue')
+
     static_margin, CG_chord, mac = avl_sm(Trainer)
     plt.savefig(f"iteration/{w}.png"); w += 1; 
 
@@ -251,7 +204,7 @@ export = open("plane_geometry.txt", 'w')
 export.write(f"""[Results]
 static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.
 MTOW estimate = {MTOW: 1.2f} lbs.\nPlanform Area S = {wing.planform['S']: 1.4f}\n
-Fuselage Definitions: Total Length {total_length: 1.2f} in.\n
+Fuselage Definitions: Total Length {total_length: 1.2f} in. Total Mass {(fuse_nose.mass + fuse_main.mass + fuse_aft.mass)*32.174: 1.4f} lbs.\n
 \tNose Section:\t{fuse_nose.length: 1.4f} in.\n\tMain Section:\t{fuse_main.length: 1.4f} in.\n\tAft Section:\t{fuse_aft.length: 1.4f} in.\n
 Wing Definitions: Location from nose: {wing.x:1.2f} (in.)\n
 \tWingspan:\t{wing.planform['b']: 1.2f}\n\tRoot chord:\t{wing.planform['cr']: 1.2f}\n\tTip chord:\t{wing.planform['ct']: 1.2f}\n\tLE sweep:\t{float(np.rad2deg(wing.angles['sweep'])): 1.2f} deg.\n
