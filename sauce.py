@@ -24,14 +24,14 @@ def avl_sm(plane: Plane):
 
     return sm(Xnp, CG, mac), CG_chord, mac
 
-def CG_routine(CG, MTOW, wing_loc, aft_sec): #tallies up the CG of the new configuration
+def buildup(CG, MTOW, nose_sec, wing_loc, aft_sec): #tallies up the CG of the new configuration
     global wing, fuse_nose, fuse_main, fuse_aft, NLG, MLG, htail, vtail, total_length
     wing = Wing(wing_loc, "foam", [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
-    fuse_nose = Fuselage(0, "nose", 8, [3, 3], [6, 6])
+    fuse_nose = Fuselage(0, "nose", nose_sec, [3, 3], [6, 6])
 
     #making the main fuselage section end where the wing ends
-    main_end = wing_loc + wing.planform['cr'] - fuse_nose.length
-    fuse_main = Fuselage(fuse_nose.length, "main", main_end, [6, 6])
+    main_sec = wing_loc + wing.planform['cr'] - fuse_nose.length
+    fuse_main = Fuselage(fuse_nose.length, "main", main_sec, [6, 6])
     fuse_aft = Fuselage(fuse_main.x + fuse_main.length, "aft", aft_sec, [6, 6], [2, 2])
 
     total_length = fuse_nose.length + fuse_main.length + fuse_aft.length
@@ -53,7 +53,6 @@ def CG_routine(CG, MTOW, wing_loc, aft_sec): #tallies up the CG of the new confi
                 wing, htail, vtail,
                 batt, ESC, prop, motor]
     
-    print(NLG.x)
 
     Trainer = Plane("Trainer", components, Sref = S) #collect all component into one plane
 
@@ -100,15 +99,16 @@ motor = Component(1, "motor", point_mass = True)
 
 #Routine Setup--------------------------------------------||
 S =  MTOW / WS
-wing_loc = 24; 
+    #initial fuselage definitions
+nose_sec = 8; 
+wing_loc = 18; 
+aft_sec = 24; 
 wing = Wing(wing_loc, "foam", 
             [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
 #initially assume CG @ half root chord behind the wing
 CG = wing.x + wing.planform['cr']/2
-aft_sec = 24 #start with aft fuselage length = 24 in.
 S_h = V_h * wing.planform['S'] * wing.planform['cr'] / aft_sec
 htail = Component(aft_sec, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab') #dummy htail for loop to work
-
 #--------------------------------------------------------||
 
 
@@ -123,7 +123,7 @@ while res > 1e-3:
     S =  MTOW / WS
     CG_old = CG
 
-    Trainer, MTOW, CG, CG_chord = CG_routine(CG_old, MTOW_old, wing_loc, aft_sec)
+    Trainer, MTOW, CG, CG_chord = buildup(CG_old, MTOW_old, nose_sec, wing_loc, aft_sec)
     #Trainer.plane_plot(Trainer.components)
     #plt.plot(CG, 0, 'x', color='tab:blue')
 
@@ -140,64 +140,92 @@ CG_lower = 0.30                    #
 #------------------------------------
 
 
-while  CG_chord < CG_lower or CG_chord > CG_upper: 
-    CG_chord_old = CG_chord
-    if CG_chord_old > CG_upper:
-        wing_loc += 1
-    if CG_chord_old < CG_lower:
-        wing_loc -= 1
+def CG_routine(Trainer, wing_loc, CG, MTOW, increment: float, CG_upper = CG_upper, CG_lower = CG_lower): 
+    global w, CG_chord
+    while  CG_chord < CG_lower or CG_chord > CG_upper: 
+        CG_chord_old = CG_chord
+        if CG_chord_old > CG_upper:
+            wing_loc += increment
+        if CG_chord_old < CG_lower:
+            wing_loc -= increment
     
-    Trainer, MTOW, CG, CG_chord = CG_routine(CG, MTOW, wing_loc, aft_sec)
-    Trainer.plane_plot(Trainer.components)
-    plt.plot(CG, 0, 'x', color='tab:blue')
+        Trainer, MTOW, CG, CG_chord = buildup(CG, MTOW, nose_sec, wing_loc, aft_sec)
+        Trainer.plane_plot(Trainer.components)
+        plt.plot(CG, 0, 'x', color='tab:blue')
+        
+        print(f"CG is at {CG_chord: 1.1%} chord")
 
-    plt.savefig(f"iteration/{w}.png"); w += 1; 
-print(f"CG Placement Study done. CG @ {CG_chord:1.1%} chord; MTOW = {MTOW: 1.2f} lbs.")
-
-print("Send to AVL for stability...")
-static_margin, CG_chord, mac = avl_sm(Trainer)
+        plt.savefig(f"iteration/{w}.png"); w += 1; 
+    print(f"CG Placement Study done. CG @ {CG_chord:1.1%} chord; MTOW = {MTOW: 1.2f} lbs.")
+    return Trainer, wing_loc, CG, MTOW
 
 #Configure upper & lower limits-------
 sm_upper = 0.15
 sm_lower = 0.10
 #-------------------------------------
 
-while sm_lower < static_margin > sm_upper:
-    if static_margin < sm_lower: #too close
-        aft_sec += 0.1 #increase empennage length
-        #V_h += 0.001 #increase hstab size - change volume coeff, hold off for now
-        pass
-    if static_margin > sm_upper: #too large
-        aft_sec -= 0.1 #decrease empennage length
-        #V_h -= 0.001 #decrease hstab size - change volume coeff, hold off for now
-        pass
-    
-    Trainer, MTOW, CG, CG_chord = CG_routine(CG, MTOW, wing_loc, aft_sec)
-    Trainer.plane_plot(Trainer.components)
-    plt.plot(CG, 0, 'x', color='tab:blue')
-
+def SM_routine(Trainer, aft_sec, CG, MTOW, increment: float, sm_upper = sm_upper, sm_lower = sm_lower): 
+    global w, static_margin
+    print("Send to AVL for stability...")
     static_margin, CG_chord, mac = avl_sm(Trainer)
-    plt.savefig(f"iteration/{w}.png"); w += 1; 
+    while sm_lower < static_margin > sm_upper or static_margin <= 0:
+        if static_margin < sm_lower: #too close
+            aft_sec += increment #increase empennage length
+            #V_h += 0.001 #increase hstab size - change volume coeff, hold off for now
+            pass
+        if static_margin > sm_upper: #too large
+            aft_sec -= increment #decrease empennage length
+            #V_h -= 0.001 #decrease hstab size - change volume coeff, hold off for now
+            pass
+        
+        Trainer, MTOW, CG, CG_chord = buildup(CG, MTOW, nose_sec, wing_loc, aft_sec)
+        Trainer.plane_plot(Trainer.components)
+        plt.plot(CG, 0, 'x', color='tab:blue')
 
-    print(f"static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.")
+        static_margin, CG_chord, mac = avl_sm(Trainer)
+        plt.savefig(f"iteration/{w}.png"); w += 1; 
+
+        print(f"static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.")
+    return Trainer, aft_sec, CG, MTOW
+
+def LG_routine(Trainer, nose_sec, wing_loc, CG, MTOW, increment: float, fwd_limit = 2):
+    global w
+    while NLG.x < fwd_limit:
+        nose_sec += increment
+        wing_loc += increment 
+        Trainer, MTOW, CG, CG_chord = buildup(CG, MTOW, nose_sec, wing_loc, aft_sec)
+        Trainer.plane_plot(Trainer.components)
+        plt.plot(CG, 0, 'x', color='tab:blue')
 
 
-while  CG_chord < CG_lower or CG_chord > CG_upper: 
-    #2nd iteration if necessary
-    CG_chord_old = CG_chord
-    if CG_chord_old > CG_upper:
-        wing_loc += 0.1
-    if CG_chord_old < CG_lower:
-        wing_loc -= 0.1
+        static_margin, CG_chord, mac = avl_sm(Trainer)
+        plt.savefig(f"iteration/{w}.png"); w += 1; 
 
-    Trainer, MTOW, CG, CG_chord = CG_routine(CG, MTOW, wing_loc, aft_sec)
-    Trainer.plane_plot(Trainer.components)
-    plt.plot(CG, 0, 'x', color='tab:blue')
+        print(f"static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.")
+    print(f"NLG location is {NLG.x} in. from the nose.")
+    return Trainer, nose_sec, wing_loc, CG, MTOW
 
-    static_margin, CG_chord, mac = avl_sm(Trainer)
-    plt.savefig(f"iteration/{w}.png"); w += 1; 
+Trainer, wing_loc, CG, MTOW = CG_routine(Trainer, wing_loc, CG, MTOW, 1)
+Trainer, aft_sec, CG, MTOW = SM_routine(Trainer, aft_sec, CG, MTOW, 1)
+Trainer, nose_sec, wing_loc, CG, MTOW = LG_routine(Trainer, nose_sec, wing_loc, CG, MTOW, 1)
+print(wing_loc, aft_sec, "so funny")
 
-    print(f"static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.")
+# while  CG_chord < CG_lower or CG_chord > CG_upper: 
+#     #2nd iteration if necessary
+#     CG_chord_old = CG_chord
+#     if CG_chord_old > CG_upper:
+#         wing_loc += 0.1
+#     if CG_chord_old < CG_lower:
+#         wing_loc -= 0.1
+
+#     Trainer, MTOW, CG, CG_chord = buildup(CG, MTOW, wing_loc, aft_sec)
+#     Trainer.plane_plot(Trainer.components)
+#     plt.plot(CG, 0, 'x', color='tab:blue')
+
+#     static_margin, CG_chord, mac = avl_sm(Trainer)
+#     plt.savefig(f"iteration/{w}.png"); w += 1; 
+
+#     print(f"static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.")
 
 #Export Results
 export = open("plane_geometry.txt", 'w')
