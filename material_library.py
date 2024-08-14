@@ -17,3 +17,5 @@ def materials(des: str, relative = False):
             case "motor": return 0.01305402 #slugs
             case "Rx batt": return 0.009593052 #slugs
             case "Rx": return 0.0009593052 #slugs
+
+            case "payload": return 0.0 #slugs, pretend value

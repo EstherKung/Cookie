@@ -25,12 +25,12 @@ def avl_sm(plane: Plane):
     return sm(Xnp, CG, mac), CG_chord, mac
 
 def buildup(CG, MTOW, nose_sec, wing_loc, aft_sec): #tallies up the CG of the new configuration
-    global wing, fuse_nose, fuse_main, fuse_aft, NLG, MLG, htail, vtail, total_length
+    global wing, fuse_nose, fuse_main, fuse_aft, NLG, MLG, htail, vtail, total_length, avionics_loc
     wing = Wing(wing_loc, "foam", [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
     fuse_nose = Fuselage(0, "nose", nose_sec, [3, 3], [6, 6])
 
     #making the main fuselage section end where the wing ends
-    main_sec = wing_loc + wing.planform['cr'] - fuse_nose.length
+    main_sec = 1.6 * wing.planform['cr'] #see main_sec constraint on Notion
     fuse_main = Fuselage(fuse_nose.length, "main", main_sec, [6, 6])
     fuse_aft = Fuselage(fuse_main.x + fuse_main.length, "aft", aft_sec, [6, 6], [2, 2])
 
@@ -48,10 +48,20 @@ def buildup(CG, MTOW, nose_sec, wing_loc, aft_sec): #tallies up the CG of the ne
     htail = Component(emp_xloc, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab')
     vtail = Component(emp_xloc, "balsa", type = 'area', AR = ARv, area = S_v, aero = 'vstab')
 
+    payload = Component(fuse_main.x + fuse_main.length/2, "payload", point_mass = True)
+    batt = Component(avionics_loc, "battery", point_mass = True)
+    Rx = Component(avionics_loc, "Rx", point_mass = True)
+    Rx_batt = Component(avionics_loc + 4, "Rx batt", point_mass = True)
+    ESC = Component(avionics_loc, "ESC", point_mass = True)
+
+    print("SOEUAHSHEOGUH LOOK AT ME", batt.x)
+
     components = [fuse_nose, fuse_main, fuse_aft,
                 NLG, MLG, 
                 wing, htail, vtail,
-                batt, ESC, prop, motor]
+                batt, ESC, prop, motor, 
+                payload #funny payload
+                ]
     
 
     Trainer = Plane("Trainer", components, Sref = S) #collect all component into one plane
@@ -88,10 +98,8 @@ ARv = 1.5; V_v = 0.04;
 "----------------------------------------------------------"
 
 "Default Components on Plane-------------------------------"
-batt = Component(4, "battery", point_mass = True)
-Rx = Component(4, "Rx", point_mass = True)
-Rx_batt = Component(8, "Rx batt", point_mass = True)
-ESC = Component(4, "ESC", point_mass = True)
+avionics_loc = 8
+
 prop = Component(0, "prop", point_mass = True)
 motor = Component(1, "motor", point_mass = True)
 "----------------------------------------------------------"
@@ -101,7 +109,7 @@ motor = Component(1, "motor", point_mass = True)
 S =  MTOW / WS
     #initial fuselage definitions
 nose_sec = 8; 
-wing_loc = 18; 
+wing_loc = 12; 
 aft_sec = 24; 
 wing = Wing(wing_loc, "foam", 
             [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
@@ -129,6 +137,7 @@ while res > 1e-3:
 
     res = abs(MTOW_old - MTOW)
 print(f"Mass Convergence Study Done. MTOW = {MTOW: 1.2f} lbs.")
+print(CG)
 
 #CG Placement Study by varying wing placement
 print("Performing Routine 2: CG Placement Study...")
@@ -142,6 +151,7 @@ CG_lower = 0.30                    #
 
 def CG_routine(Trainer, wing_loc, CG, MTOW, increment: float, CG_upper = CG_upper, CG_lower = CG_lower): 
     global w, CG_chord
+    #min wing placement is at nose_sec, furthest back wing placement is at fuse_main.x + fuse_main.length - wing.planform['cr']
     while  CG_chord < CG_lower or CG_chord > CG_upper: 
         CG_chord_old = CG_chord
         if CG_chord_old > CG_upper:
@@ -160,7 +170,7 @@ def CG_routine(Trainer, wing_loc, CG, MTOW, increment: float, CG_upper = CG_uppe
     return Trainer, wing_loc, CG, MTOW
 
 #Configure upper & lower limits-------
-sm_upper = 0.15
+sm_upper = 0.20
 sm_lower = 0.10
 #-------------------------------------
 
@@ -197,7 +207,6 @@ def LG_routine(Trainer, nose_sec, wing_loc, CG, MTOW, increment: float, fwd_limi
         Trainer.plane_plot(Trainer.components)
         plt.plot(CG, 0, 'x', color='tab:blue')
 
-
         static_margin, CG_chord, mac = avl_sm(Trainer)
         plt.savefig(f"iteration/{w}.png"); w += 1; 
 
@@ -205,27 +214,14 @@ def LG_routine(Trainer, nose_sec, wing_loc, CG, MTOW, increment: float, fwd_limi
     print(f"NLG location is {NLG.x} in. from the nose.")
     return Trainer, nose_sec, wing_loc, CG, MTOW
 
-Trainer, wing_loc, CG, MTOW = CG_routine(Trainer, wing_loc, CG, MTOW, 1)
+wing_loc = fuse_main.x + fuse_main.length - wing.planform['cr']
+Trainer, wing_loc, CG, MTOW = CG_routine(Trainer, wing_loc, CG, MTOW, 0.5)
+print("now to confirm static margin...")
 Trainer, aft_sec, CG, MTOW = SM_routine(Trainer, aft_sec, CG, MTOW, 1)
+avionics_loc = fuse_main.x - 4
+print("landing gear placement")
 Trainer, nose_sec, wing_loc, CG, MTOW = LG_routine(Trainer, nose_sec, wing_loc, CG, MTOW, 1)
 print(wing_loc, aft_sec, "so funny")
-
-# while  CG_chord < CG_lower or CG_chord > CG_upper: 
-#     #2nd iteration if necessary
-#     CG_chord_old = CG_chord
-#     if CG_chord_old > CG_upper:
-#         wing_loc += 0.1
-#     if CG_chord_old < CG_lower:
-#         wing_loc -= 0.1
-
-#     Trainer, MTOW, CG, CG_chord = buildup(CG, MTOW, wing_loc, aft_sec)
-#     Trainer.plane_plot(Trainer.components)
-#     plt.plot(CG, 0, 'x', color='tab:blue')
-
-#     static_margin, CG_chord, mac = avl_sm(Trainer)
-#     plt.savefig(f"iteration/{w}.png"); w += 1; 
-
-#     print(f"static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.")
 
 #Export Results
 export = open("plane_geometry.txt", 'w')

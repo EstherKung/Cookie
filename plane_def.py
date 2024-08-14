@@ -195,7 +195,7 @@ class Plane():
             ax.add_patch(geometry.geometry())
         ax.axis('equal')
         # set the figure limit
-        plt.xlim([-5, 90]); plt.ylim([-100, 100])
+        plt.xlim([-20, 90]); plt.ylim([-100, 100])
         plt.title(this.name)
     
     def to_avl(this):
