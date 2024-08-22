@@ -17,17 +17,17 @@
   Beta  =   0.00000     qc/2V =   0.00000
   Mach  =     0.000     rb/2V =  -0.00000     r'b/2V =  -0.00000
 
-  CXtot =  -0.00664     Cltot =   0.00000     Cl'tot =   0.00000
-  CYtot =  -0.00000     Cmtot =  -0.00000
-  CZtot =  -0.12261     Cntot =   0.00000     Cn'tot =   0.00000
+  CXtot =  -0.00000     Cltot =  -0.00000     Cl'tot =  -0.00000
+  CYtot =   0.00000     Cmtot =   0.00000
+  CZtot =  -0.00000     Cntot =  -0.00000     Cn'tot =  -0.00000
 
-  CLtot =   0.12261
-  CDtot =   0.00664
-  CDvis =   0.00000     CDind = 0.0066398
-  CLff  =   0.12261     CDff  = 0.0024327    | Trefftz
-  CYff  =  -0.00000         e =    0.3278    | Plane  
+  CLtot =   0.00000
+  CDtot =   0.00000
+  CDvis =   0.00000     CDind = 0.0000000
+  CLff  =   0.00000     CDff  = 0.0000000    | Trefftz
+  CYff  =   0.00000         e =    0.0000    | Plane  
 
-   Elevator        = -16.31736
-   Rudder          =  -0.00000
+   Elevator        =   0.00000
+   Rudder          =   0.00000
 
  ---------------------------------------------------------------
