@@ -8,8 +8,8 @@ def materials(des: str, relative = False):
         match des:
             case "balsa": return 0.000022917375 #slugs/in^2
             case "foam": return 0.00001798666418 #slugs/in^3
-            case "NLG": return 4.91e-3 #slugs
-            case "MLG": return 0.006038601994 #slugs
+            case "NLG": return 0.006209855201 #slugs
+            case "MLG": return 0.006226462115 #slugs
 
             case "prop": return  0.0031469472 #slugs
             case "battery": return  0.022269585 #slugs

@@ -16,8 +16,7 @@ class Component:
     def __init__(this, x: float, mat: str, type = None, point_mass = False, **kwargs):
         this.cfg = kwargs 
         #specify aero = wing, hstab, vstab for avl purposes
-        this.x = x #distance from the nose
-        
+        this.x = x #distance from nose
         this.material = materials(mat)
         this.S_wet = None
         this.FF = 1 #default form factor
@@ -246,10 +245,11 @@ class Plane():
         return MTOW 
 
     ### this section is for CG tally
-    def CG_tally(this):
+    def CG_tally(this, components = None):
         m_tot = 0 
-        tally = 0 
-        for component in this.components:
+        tally = 0
+        if components is None: components = this.components 
+        for component in components:
             loc = component.x_cg + component.x
             tally = tally + (component.mass * loc)
             m_tot = m_tot + (component.mass)
