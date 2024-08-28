@@ -46,6 +46,7 @@ def buildup(CG, MTOW, nose_sec, wing_loc, aft_sec): #tallies up the CG of the ne
     vtail = Component(emp_xloc, "balsa", type = 'area', AR = ARv, area = S_v, aero = 'vstab')
 
     payload = Component(fuse_main.x + fuse_main.length/2, "payload", point_mass = True)
+    avionics_loc = fuse_main.x 
     batt = Component(avionics_loc, "battery", point_mass = True)
     Rx = Component(avionics_loc, "Rx", point_mass = True)
     Rx_batt = Component(avionics_loc + 4, "Rx batt", point_mass = True)
@@ -64,9 +65,7 @@ def buildup(CG, MTOW, nose_sec, wing_loc, aft_sec): #tallies up the CG of the ne
     CG_new, mtot = Trainer.CG_tally()
     MTOW = Trainer.MTOW_tally()
 
-    CG_chord = (CG - wing.x)/ wing.planform['cr']
-    #print(f"CG @ {CG_chord:1.1%} chord. ")
-    return Trainer, MTOW, CG_new, CG_chord
+    return Trainer, MTOW, CG_new
 
 #mass convergence is still the same:
 afile = "airfoil_library/S4233.dat"
@@ -94,7 +93,6 @@ ARv = 1.5; V_v = 0.04;
 "----------------------------------------------------------"
 
 "Default Components on Plane-------------------------------"
-avionics_loc = 0
 
 prop = Component(0, "prop", point_mass = True)
 motor = Component(1, "motor", point_mass = True)
@@ -127,7 +125,7 @@ while res > 1e-3:
     S =  MTOW / WS
     CG_old = CG
 
-    Trainer, MTOW, CG, CG_chord = buildup(CG_old, MTOW_old, nose_sec, wing_loc, aft_sec)
+    Trainer, MTOW, CG = buildup(CG_old, MTOW_old, nose_sec, wing_loc, aft_sec)
     #Trainer.plane_plot(Trainer.components)
     #plt.plot(CG, 0, 'x', color='tab:blue')
 
@@ -155,6 +153,8 @@ sm_lower = 0.10
 #-------------------------------------
 increment = 0.05
 static_margin = avl_np(Trainer, CG_target_loc)
+print(f"static margin: {static_margin: 1.2%}")
+
 w = 0
 while not (sm_lower < static_margin < sm_upper): 
     if static_margin < sm_lower: 
@@ -162,15 +162,36 @@ while not (sm_lower < static_margin < sm_upper):
     if static_margin > sm_upper:
         aft_sec -= increment
     
-    Trainer, MTOW, CG, CG_actual = buildup(CG_target_loc, MTOW_old, nose_sec, wing_loc, aft_sec)
+    Trainer, MTOW, CG = buildup(CG_target_loc, MTOW_old, nose_sec, wing_loc, aft_sec)
     Trainer.plane_plot(Trainer.components)
     static_margin = avl_np(Trainer, CG_target_loc)
     print(f"static margin: {static_margin: 1.2%}")
     plt.plot(CG_target_loc, 0, 'x')
     plt.savefig(f"iteration/{w}.png"); w += 1; 
 #plt.show()
+Trainer, MTOW, CG = buildup(CG_target_loc, MTOW_old, nose_sec, wing_loc, aft_sec)
 
-print(CG_actual - CG_target_loc) #if forward, negative; if aft, positive
+print(f"current CG discrepancy: {CG - CG_target_loc}") #if forward, negative; if aft, positive
+
+while NLG.x < 3:
+    nose_sec += 0.5
+    wing_loc += 0.5
+    CG_percent_chord = 0.35
+    CG_chord = wing.planform['cr'] * CG_percent_chord
+    CG_target_loc = wing.x + CG_chord
+
+    Trainer, MTOW, CG = buildup(CG_target_loc, MTOW_old, nose_sec, wing_loc, aft_sec)
+    #print(f"nose sec gives {nose_sec} and NLG is currently at {NLG.x}")
+    Trainer.plane_plot(Trainer.components)
+    #static_margin = avl_np(Trainer, CG_target_loc)
+    #print(f"static margin: {static_margin: 1.2%}")
+    plt.plot(CG_target_loc, 0, 'x')
+    plt.savefig(f"iteration/{w}.png"); w += 1; 
+
+    print(f"CG discrepancy {CG - CG_target_loc}")
+    #print(f"confirm this stays constant over adjustment {htail.x-wing.x}")
+
+print(MTOW)
 
 #nose placement
 #write wing section length relative to nose section

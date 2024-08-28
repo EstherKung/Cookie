@@ -39,7 +39,15 @@
 
    Building surface: Wing                                    
      Reading airfoil from file: C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat
+
+ File OPEN error:  C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat  
+ **   Airfoil file not found  : C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat
+ **   Using default zero-camber airfoil
      Reading airfoil from file: C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat
+
+ File OPEN error:  C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat  
+ **   Airfoil file not found  : C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat
+ **   Using default zero-camber airfoil
   
    Building duplicate image-surface: Wing (YDUP)                             
 
@@ -222,8 +230,7 @@
   Building bound-vortex velocity matrix...
 
  iter d(alpha)   d(beta)    d(pb/2V)   d(qc/2V)   d(rb/2V)   Elevator   Rudder     
-   1 -0.497E-60 -0.000E+00 -0.000E+00  0.683E-47  0.143E-30 -0.132E+02  0.695E-13
-   2  0.959E-32 -0.000E+00  0.317E-64 -0.242E-33 -0.144E-30 -0.368E-14  0.563E-16
+   1 -0.000E+00 -0.000E+00  0.000E+00 -0.000E+00  0.000E+00 -0.000E+00  0.000E+00
  ---------------------------------------------------------------
  Vortex Lattice Output -- Total Forces
 
@@ -240,20 +247,20 @@
  Run case:  -unnamed-                              
 
   Alpha =   0.00000     pb/2V =  -0.00000     p'b/2V =  -0.00000
-  Beta  =   0.00000     qc/2V =  -0.00000
-  Mach  =     0.000     rb/2V =   0.00000     r'b/2V =   0.00000
+  Beta  =   0.00000     qc/2V =   0.00000
+  Mach  =     0.000     rb/2V =  -0.00000     r'b/2V =  -0.00000
 
-  CXtot =  -0.00555     Cltot =  -0.00000     Cl'tot =  -0.00000
+  CXtot =  -0.00000     Cltot =  -0.00000     Cl'tot =  -0.00000
   CYtot =   0.00000     Cmtot =   0.00000
-  CZtot =  -0.14357     Cntot =  -0.00000     Cn'tot =  -0.00000
+  CZtot =  -0.00000     Cntot =  -0.00000     Cn'tot =  -0.00000
 
-  CLtot =   0.14357
-  CDtot =   0.00555
-  CDvis =   0.00000     CDind = 0.0055481
-  CLff  =   0.14357     CDff  = 0.0336306    | Trefftz
-  CYff  =   0.00000         e =    0.0325    | Plane  
+  CLtot =   0.00000
+  CDtot =   0.00000
+  CDvis =   0.00000     CDind = 0.0000000
+  CLff  =   0.00000     CDff  = 0.0000000    | Trefftz
+  CYff  =   0.00000         e =    0.0000    | Plane  
 
-   Elevator        = -13.16699
+   Elevator        =   0.00000
    Rudder          =   0.00000
 
  ---------------------------------------------------------------
