@@ -20,7 +20,7 @@ Wing
 YDUPLICATE    
 0.0           
 TRANSLATE     
-12   0.0  0.0    
+13.10507  0.0  0.0    
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
@@ -43,13 +43,13 @@ Hstab
 YDUPLICATE    
 0.0           
 TRANSLATE     
-48.51348  0.0  0.0    
+52.77273  0.0  0.0    
 COMPONENT     
 1             
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-0.0           0.0           0.0           4.8928        0.0           0             0             
+0.0           0.0           0.0           4.67661       0.0           0             0             
 
 CONTROL
 #Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
@@ -57,7 +57,7 @@ Elevator      1.0           0.7           0.0 0.0 0.0   1
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-0             7.33921       0.0           4.8928        0.0           0             0             
+0             7.01492       0.0           4.67661       0.0           0             0             
 
 CONTROL
 #Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
@@ -70,13 +70,13 @@ Vstab
 #Nchordwise   #Cspace       #Nspanwise    #Sspace       
 8             1.0           12            1.0           
 TRANSLATE     
-48.51348  0.0  0.0    
+52.77273  0.0  0.0    
 COMPONENT     
 1             
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-0.0           0.0           0.0           4.48433       0.0           0             0             
+0.0           0.0           0.0           4.28619       0.0           0             0             
 
 CONTROL
 #Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
@@ -84,7 +84,7 @@ Rudder        1.0           0.7           0.0 0.0 0.0   1.0
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-0             0             6.72649       4.48433       0.0           0             0             
+0             0             6.42928       4.28619       0.0           0             0             
 
 CONTROL
 #Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       

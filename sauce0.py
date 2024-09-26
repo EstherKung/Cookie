@@ -24,26 +24,29 @@ def avl_sm(plane: Plane):
 
     return sm(Xnp, CG, mac), CG_chord, mac
 
-def buildup(CG, MTOW, wing_loc, emp_length): #tallies up the CG of the new configuration
-    global wing, boom, pod, NLG, MLG, htail, vtail, total_length, avionics_loc
+def buildup(CG, MTOW, nose_sec, wing_loc, aft_sec): #tallies up the CG of the new configuration
+    global wing, fuse_nose, fuse_main, fuse_aft, NLG, MLG, htail, vtail, total_length, avionics_loc
     wing = Wing(wing_loc, "foam", [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
+    fuse_nose = Fuselage(0, "nose", nose_sec, [3, 3], [6, 6])
 
-    #the "fuselage" body
-    pod = Component(0, "pod", length = 8, diameter = 6)
-    boom = Component(pod.length, "boom", type = 'length', xdim = emp_length, ydim = 0.03)
-    total_length = pod.length + boom.length
+    #making the main fuselage section end where the wing ends
+    main_sec = 1.6 * wing.planform['cr'] #see main_sec constraint on Notion
+    fuse_main = Fuselage(fuse_nose.length, "main", main_sec, [6, 6])
+    fuse_aft = Fuselage(fuse_main.x + fuse_main.length, "aft", aft_sec, [6, 6], [2, 2])
+
+    total_length = fuse_nose.length + fuse_main.length + fuse_aft.length
+    LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
 
     ### LG - specified
-    # LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
     # NLG = LandingGear(CG - NLG_fwd_strut, "NLG", point_mass = True)
     # MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) 
 
     ### LG - initial guesses
-    NLG = LandingGear(pod.length * 0.2, "other", type = 'specified', mass = MTOW * 0.1 * 0.35, x_cg = 0)
+    NLG = LandingGear(fuse_nose.length * 0.2, "other", type = 'specified', mass = MTOW * 0.1 * 0.35, x_cg = 0)
     MLG = LandingGear(CG + 0.1 * total_length, "other", type = 'specified', mass = MTOW * 0.1 * 0.65, x_cg = 0) #MLG 10% of the total length behind the CG location
 
 
-    emp_xloc = boom.x + boom.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
+    emp_xloc = fuse_aft.x + fuse_aft.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
     l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail
     S_h = V_h * S * wing.planform['cr'] / l_emp #that c is the mac, supposedly
     S_v = V_v * S * wing.planform['b'] / l_emp
@@ -51,10 +54,7 @@ def buildup(CG, MTOW, wing_loc, emp_length): #tallies up the CG of the new confi
     htail = Component(emp_xloc, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab')
     vtail = Component(emp_xloc, "balsa", type = 'area', AR = ARv, area = S_v, aero = 'vstab')
 
-    payload = Component(wing.x + wing.planform['cr']/4, "other", type = "specified", mass = 0.5* MTOW) #payload capacity be 50% of MTOW
-    
-
-    ### Avionics
+    payload = Component(fuse_main.x + fuse_main.length/2, "payload", point_mass = True)
     batt = Component(avionics_loc, "battery", point_mass = True)
     Rx = Component(avionics_loc, "Rx", point_mass = True)
     Rx_batt = Component(avionics_loc + 4, "Rx batt", point_mass = True)
@@ -62,7 +62,7 @@ def buildup(CG, MTOW, wing_loc, emp_length): #tallies up the CG of the new confi
 
     print("SOEUAHSHEOGUH LOOK AT ME", batt.x)
 
-    components = [boom, pod, 
+    components = [fuse_nose, fuse_main, fuse_aft,
                 NLG, MLG, 
                 wing, htail, vtail,
                 batt, ESC, prop, motor, 
@@ -98,7 +98,7 @@ print(f"initial MTOW = {MTOW: 1.2f} lbs.")
 
 
 "Tail Volume Coefficients & AR-----------------------------"
-AR = 6; tr = 1; 
+AR = 6; tr = 0.4; 
 ARh = 0.5*AR; V_h = 0.40; 
 ARv = 1.5; V_v = 0.04; 
 "----------------------------------------------------------"
@@ -234,7 +234,8 @@ export = open("plane_geometry.txt", 'w')
 export.write(f"""[Results]
 static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.
 MTOW estimate = {MTOW: 1.2f} lbs.\nPlanform Area S = {wing.planform['S']: 1.4f}\n
-Boom Length: {boom.x: 1.2f} in.\n
+Fuselage Definitions: Total Length {total_length: 1.2f} in. Total Mass {(fuse_nose.mass + fuse_main.mass + fuse_aft.mass)*32.174: 1.4f} lbs.\n
+\tNose Section:\t{fuse_nose.length: 1.4f} in.\n\tMain Section:\t{fuse_main.length: 1.4f} in.\n\tAft Section:\t{fuse_aft.length: 1.4f} in.\n
 Wing Definitions: Location from nose: {wing.x:1.2f} (in.)\n
 \tWingspan:\t{wing.planform['b']: 1.2f}\n\tRoot chord:\t{wing.planform['cr']: 1.2f}\n\tTip chord:\t{wing.planform['ct']: 1.2f}\n\tLE sweep:\t{float(np.rad2deg(wing.angles['sweep'])): 1.2f} deg.\n
 Empennage Definitions: (in.)\n

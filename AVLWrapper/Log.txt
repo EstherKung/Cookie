@@ -222,8 +222,8 @@
   Building bound-vortex velocity matrix...
 
  iter d(alpha)   d(beta)    d(pb/2V)   d(qc/2V)   d(rb/2V)   Elevator   Rudder     
-   1 -0.497E-60 -0.000E+00 -0.000E+00  0.683E-47  0.143E-30 -0.132E+02  0.695E-13
-   2  0.959E-32 -0.000E+00  0.317E-64 -0.242E-33 -0.144E-30 -0.368E-14  0.563E-16
+   1 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.000E+00 -0.127E+02  0.203E-13
+   2 -0.759E-32 -0.000E+00  0.291E-33  0.232E-33 -0.157E-33  0.374E-14 -0.220E-15
  ---------------------------------------------------------------
  Vortex Lattice Output -- Total Forces
 
@@ -239,21 +239,21 @@
 
  Run case:  -unnamed-                              
 
-  Alpha =   0.00000     pb/2V =  -0.00000     p'b/2V =  -0.00000
-  Beta  =   0.00000     qc/2V =  -0.00000
+  Alpha =  -0.00000     pb/2V =  -0.00000     p'b/2V =  -0.00000
+  Beta  =   0.00000     qc/2V =   0.00000
   Mach  =     0.000     rb/2V =   0.00000     r'b/2V =   0.00000
 
-  CXtot =  -0.00555     Cltot =  -0.00000     Cl'tot =  -0.00000
-  CYtot =   0.00000     Cmtot =   0.00000
-  CZtot =  -0.14357     Cntot =  -0.00000     Cn'tot =  -0.00000
+  CXtot =  -0.00487     Cltot =   0.00000     Cl'tot =   0.00000
+  CYtot =  -0.00000     Cmtot =   0.00000
+  CZtot =  -0.14510     Cntot =   0.00000     Cn'tot =   0.00000
 
-  CLtot =   0.14357
-  CDtot =   0.00555
-  CDvis =   0.00000     CDind = 0.0055481
-  CLff  =   0.14357     CDff  = 0.0336306    | Trefftz
-  CYff  =   0.00000         e =    0.0325    | Plane  
+  CLtot =   0.14510
+  CDtot =   0.00487
+  CDvis =   0.00000     CDind = 0.0048736
+  CLff  =   0.14510     CDff  =-0.0013872    | Trefftz
+  CYff  =  -0.00000         e =   -0.8051    | Plane  
 
-   Elevator        = -13.16699
+   Elevator        = -12.70254
    Rudder          =   0.00000
 
  ---------------------------------------------------------------

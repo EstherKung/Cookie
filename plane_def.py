@@ -50,6 +50,10 @@ class Component:
             case 'section': #to build a robust code for sections (e.g. fuse)
                 this.mass = this.material * this.cfg['length']
                 this.x_cg = this.cfg['x_cg']
+            case 'specified': #an option to specify/"hardcode" the mass
+                this.mass = this.cfg['mass']
+                this.x_cg = this.cfg['x_cg']
+                
     
     def m(this): #in g
         return this.mass

@@ -11,8 +11,8 @@ from std_atmosphere import *
 
 g = 32.17
 Tn, Tx = 6.494, 9.363 # lbf, thrust @ v=36.1 ft/s to static thrust
-bn, bx = 10, 15 # ft, min span to max span
-cn, cx = 1, 2.5 # ft, 12 inch to 30 inch
+bn, bx = 4, 6 # ft, min span to max span
+cn, cx = 0.75, 2 # ft, for AR 5-8
 Sn, Sx = bn*cn, bx*cx # ft**2
 Wn, Wx = 12, 40 # lbf structural to max
 
@@ -122,7 +122,8 @@ class Constraint_Diagram:
                 v[1] = v[0] + dt*acc(v[0])
                 x[1] = x[0] + dt*v[1]
             return Vto - v[0]
-        TW1 = 0.1; TW2 = 0.11 # Don't change this unless you have to
+        #TW1 = 0.1; TW2 = 0.11 # Don't change this unless you have to
+        TW1 = 0.1; TW2 = 0.07
         self.ax.plot(self.cfg['WS'], secant_method(self.cfg['WS'], TW1, TW2, takeoff_error), label = 'Takeoff')
 
     def Constraint_Landing(self, landing_distance: float = None, V_landing: float = None):
@@ -155,16 +156,16 @@ cd.cfg['rho'] = rho_std(0)
 cd.cfg['g']   = 32.17 #ft/s**2
 
 "Constraint defaults"
-cd.cfg['Lto'] = 100 #Takeoff distance, ft
+cd.cfg['Lto'] = 300 #Takeoff distance, ft
 cd.cfg['Lld'] = 400 #Landing distance, ft
 cd.cfg['G']   = 0.1 #Climb gradient
 cd.cfg['ks']  = 1.1 #Climb configuration
-cd.cfg['phi'] = 25  #Sustained bank angle, deg
+cd.cfg['phi'] = 45  #Sustained bank angle, deg
 
 
 
 "Speeds"
-cd.cfg['Vcr'] = 28.8 #Cruies, ft/s
+cd.cfg['Vcr'] = 65.0 #Cruise, ft/s
 cd.cfg['Vld'] = 28.8 #Landing/approach, ft/s
 cd.cfg['Vst'] = 23.0 #Stall, f/ts
 
@@ -184,7 +185,7 @@ cd.Constraint_Cruise()
 cd.Constraint_Climb()
 cd.Constraint_Landing()
 cd.Constraint_Takeoff()
-cd.Constraint_Maneuver(phi=25)
+cd.Constraint_Maneuver(phi=45)
 cd.Constraint_Cruise(V_cruise=31.0)
 
 plt.legend(loc='upper left', fontsize=14)
