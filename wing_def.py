@@ -205,6 +205,7 @@ aircraftparm = {"b"        : 1.83, #wingspan
                 "sig_skin" : 0.093, #skin fabric weight
                 "sig_tape" : 0.08, #cap fabric weight
                 "rho_core" : 16.0185, #foam core density
+                "G_core"   : 1.2e7, #foam core shear modulus
                 "g"        : 9.81, #acceleration due to gravity
                 }
 
@@ -212,11 +213,11 @@ aircraftparm = {"b"        : 1.83, #wingspan
 def foamcore(b, c, t_c, m_0, N = aircraftparm['N'], w = aircraftparm['w'], 
              s_crit = aircraftparm['s_crit'], t_cap = aircraftparm['t_cap'], t_skin = aircraftparm['t_skin'], 
              n_skin = aircraftparm['n_skin'], sig_skin = aircraftparm['sig_skin'], sig_tape = aircraftparm['sig_tape'], 
-             rho_core = aircraftparm['rho_core'], g = 9.81):
+             rho_core = aircraftparm['rho_core'], G_core = aircraftparm['G_core'], g = 9.81, afile = "airfoil_library/AG25.dat"):
     """code is based in metric!!!"""
     b = b * 0.0254 #inches to m
     c = c * 0.0254 #inches to m
-    m_0 = m_0 * 14.5939 #slugs to kg
+    m_0 = m_0 * 0.453592 #lbs to kg
     
     #Load, Shear, Bending 
     y = np.linspace(0,b/2,500)
@@ -229,7 +230,11 @@ def foamcore(b, c, t_c, m_0, N = aircraftparm['N'], w = aircraftparm['w'],
     n = (1.5*M) / (s_crit*t_cap*w*((c*t_c)-2*(n_skin*t_skin)))
     n = np.ceil(n)
 
-     #Tabulation & Display:
+    #Shear Web Check
+    d_s = (N*m_0*g*b) / (8*G_core*w*(c*t_c-2*n_skin*t_skin-n[1]*t_cap))
+    # print(f"Shear Deflection: {d_s}")
+
+    #Tabulation & Display:
     data = {
         "y": y,
         "V": V,
@@ -244,40 +249,38 @@ def foamcore(b, c, t_c, m_0, N = aircraftparm['N'], w = aircraftparm['w'],
     ply_pattern = ply_pattern.drop(['V', 'M'], axis=1)
     # print(ply_pattern)
 
-    #plt.scatter(y, V)
-    #plt.scatter(y, M)
-    #plt.show()
+    # plt.scatter(y, V)
+    # plt.scatter(y, M)
+    # plt.show()
     
-    #plt.scatter(y, n)
-    #plt.show()
+    # plt.scatter(y, n)
+    # plt.show()
 
-    #wing_df.to_csv('wing_s.csv')
+    # wing_df.to_csv('wing_s.csv')
 
     #Wing Mass Calc. 
     ply_pattern.loc[:,'y'] = ply_pattern.y.shift(-1)
     ply_pattern = ply_pattern[:-1]
-    #print(ply_pattern)
+    # print(f"layup sched: {ply_pattern}")
 
-    A_cap = ply_pattern.y*ply_pattern.n #table summing area for each ply layer
-    #print(A_cap)
-    A_tape = A_cap.to_numpy().sum() #surface area for 1 spar cap layup
-    #print(A_tape)
+    A_cap = ply_pattern['y'].sum() #tape length for 1 cap layup
+    # print(f"1 Cap length:{A_cap}")
+    A_tape = A_cap*w #surface area for 1 spar cap layup
+    # print(f"1 Cap Area: {A_tape}")
 
 
     W_cap = 6*A_tape*sig_tape
     W_skin = 6*c*b*sig_skin
-    W_foam = (1/2)*(c*c*t_c*b*rho_core)
+    #W_foam = (1/2)*(c*c*t_c*b*rho_core)*0.76 #ONLY USE IF DOING THICKNESS SWEEP
+    W_foam = rho_core * csec(afile) * c** 2 * b * 0.5
 
     mass = {"Spar Cap Mass":  W_cap,
             "Wing Skin Mass": W_skin,
             "Foam Core Mass": W_foam}
-    
-    #print(mass)
 
     #mult by 2 to get both halves
     W_wing = 2*(1.1*(W_cap + W_skin + W_foam))
-    #print(W_wing)
 
-    """output out imperial, slugs"""
     W_wing = W_wing / 14.5939
+
     return W_wing

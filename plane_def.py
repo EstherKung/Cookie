@@ -51,12 +51,13 @@ class Component:
                 this.mass = this.material * this.cfg['length']
                 this.x_cg = this.cfg['x_cg']
             case 'specified': #an option to specify/"hardcode" the mass
-                this.mass = this.cfg['mass']
-                this.x_cg = this.cfg['x_cg']
+                this.mass = this.cfg['mass'] * 0.031081 #IT DEPENDS ON THE MTOW, MTOW IS IN LBS CONVERT TO SLUGS
+                if point_mass: this.x_cg = 0; this.c = 0; this.b = 0; 
+                else: this.x_cg = this.cfg['x_cg']
                 
     
-    def m(this): #in g
-        return this.mass
+    def m(this): #outputs lbs instead of slugs 😵‍💫😵‍💫😵‍💫
+        return this.mass * 31.274
     
     def wetted_area(this, des: str, fuse_d = 0.0, d = 0.0, l = 0.0):
         match des:
@@ -110,7 +111,7 @@ class Component:
         return plt.Rectangle(xy=(this.x,-this.b/2), width=this.c, height=this.b, color='tab:purple', fill = False, linewidth = 1.5)
 
 class Wing(Component):
-    def __init__(this, x: float, mat: str, param: list, angles: list, afile: str, type = 'wing'):
+    def __init__(this, x: float, mat: str, param: list, angles: list, afile: str, MTOW, type = 'aero'):
         """
         this is assuming linear taper, single section wing only, constant airfoil profile throughout.
         angles in the order [sweep, dihedral, incidence, twist]
@@ -118,7 +119,7 @@ class Wing(Component):
         param in the order in the order [AR, b, S, taper_ratio, c_r, c_t] 
         and for the ones that aren't defined, set to -1
         """
-        super().__init__(x, mat, type = 'aero', aero = 'wing')
+        super().__init__(x, mat, type, aero = 'wing')
         this.planform = {}; this.angles = {}
         this.planform['AR'], this.planform['b'], this.planform['S'], this.planform['tr'], this.planform['cr'], this.planform['ct'] = planform(param)
 
@@ -128,13 +129,14 @@ class Wing(Component):
         this.angles['dihedral'] = np.radians(angles[1]); this.angles['inc'] = angles[2]; this.angles['tw'] = angles[3]
         #to find mass
         x = np.linspace(0, this.planform['b']/2, 50) #your discretisation wooo
-        xsec = csec(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
-        #print(xsec)
-        this.mass = this.material * 2 * np.trapz(xsec, x)   
+        # xsec = csec(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
+        # print(xsec)
+        # this.mass = this.material * 2 * np.trapz(xsec, x)   
         xcentroid = centroid(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
         this.x_cg = np.trapz(xcentroid, x)/ (0.5 * this.planform['b']) #this is like average value theorem
 
         this.thickness = thickness(afile) #technically this is the thickness-to-chord, since dat file normalised it with c = 1
+        this.mass = foamcore(this.planform['b'], this.planform['cr'], this.thickness, MTOW)
     
     def geometry(this):
         x = [this.x,
@@ -198,7 +200,7 @@ class Plane():
             ax.add_patch(geometry.geometry())
         ax.axis('equal')
         # set the figure limit
-        plt.xlim([-20, 90]); plt.ylim([-100, 100])
+        plt.xlim([-20, 120]); plt.ylim([-100, 100])
         plt.title(this.name)
     
     def to_avl(this):
@@ -238,7 +240,11 @@ class Plane():
                                  'hstab': None, 'vstab': None}
         )
 
-    
+    def mass_breakdown(this): 
+        out = []
+        for item in this.components: 
+            out.append(item.m())
+        return out
     ### this section is for MTOW tally
     def MTOW_tally(this):
         m_tot = 0

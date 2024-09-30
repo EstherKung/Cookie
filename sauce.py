@@ -5,12 +5,14 @@ from wing_def import *
 from plane_def import *
 from AVLWrapper.Code.Codebase import *
 from LG_def import *
+from powerplant_def import *
  
+
 w = 0; 
-def avl_sm(plane: Plane):
+def avl_np(plane: Plane, CG_chord):
     #for avl stability analysis
     plane.to_avl()
-    ad = ADaX(planename='Trainer.avl')
+    ad = ADaX(planename='stick.avl')
     ad.output_config(['s Xnp', 't Cref'])
     #ad.use_run("AVLWrapper/AVL/Planes/Funny_Run_File.run", 1)
     ad._load(); ad._oper()
@@ -20,230 +22,187 @@ def avl_sm(plane: Plane):
     Xnp = float(results['Xnp']); mac = float(results['Cref']); 
     plt.plot(Xnp, 0, 'x', color ='tab:orange')
 
-    CG_chord = (CG - wing.x)/ wing.planform['cr']
+    return (Xnp - CG_chord)/mac #static margin percentage
 
-    return sm(Xnp, CG, mac), CG_chord, mac
+def buildup(CG, MTOW, wing_def: list, wing_loc, l_h, S_h = None): #tallies up the CG of the new configuration
+    global wing, boom, pod, NLG, MLG, htail, vtail, total_length, payload
 
-def buildup(CG, MTOW, wing_loc, emp_length): #tallies up the CG of the new configuration
-    global wing, boom, pod, NLG, MLG, htail, vtail, total_length, avionics_loc
-    wing = Wing(wing_loc, "foam", [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
+    ### 1. Wing
+    AR, b, S, tr, cr, ct = planform(wing_def)
+    
+    wing = Wing(wing_loc, "other", 
+                [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], 
+                afile, MTOW)
 
-    #the "fuselage" body
-    pod = Component(0, "pod", length = 8, diameter = 6)
-    boom = Component(pod.length, "boom", type = 'length', xdim = emp_length, ydim = 0.03)
-    total_length = pod.length + boom.length
+    ### 2. EMPENNAGE
+    stagger = 0.5 #gap distance between horizontal & vertical plate
+    if S_h is None: S_h = V_h * S * wing.planform['cr'] / l_h #that c is typ. MAC; DBF 2025 uses rectangular wing
+    emp_datum = wing.x + wing.planform['cr']/4 + l_h
 
-    ### LG - specified
-    # LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
+    htail = Component(emp_datum, "emp", type = 'area', 
+                      AR = ARh, area = S_h, aero = 'hstab')
+    
+    l_v = l_h + htail.c + stagger
+    S_v = V_v * S * wing.planform['b'] / l_v
+    vtail = Component(emp_datum + htail.c + 0.5, "emp", type = 'area', 
+                      AR = ARv, area = S_v, aero = 'vstab')
+
+    ### 3. POD + BOOM
+    pod = Component(2.4, "pod", length = 25, diameter = 3, x_cg = 0.4* 25)
+    total_length = vtail.x + vtail.c #total length of plane
+    boom = Component(pod.c, "boom", type = 'length', 
+                     length = total_length - pod.c,
+                     xdim = total_length - pod.c, ydim = 1)
+
+    ### 4. Landing Gear
+    LG_height, MLG_aft, NLG_fwd_wheel, NLG_fwd_strut, MLG_side = LG_def(CG, MTOW, total_length)
+
     # NLG = LandingGear(CG - NLG_fwd_strut, "NLG", point_mass = True)
     # MLG = LandingGear(CG + MLG_aft, "MLG", point_mass = True) 
 
-    ### LG - initial guesses
-    NLG = LandingGear(pod.length * 0.2, "other", type = 'specified', mass = MTOW * 0.1 * 0.35, x_cg = 0)
-    MLG = LandingGear(CG + 0.1 * total_length, "other", type = 'specified', mass = MTOW * 0.1 * 0.65, x_cg = 0) #MLG 10% of the total length behind the CG location
-
-
-    emp_xloc = boom.x + boom.length - 0.75* htail.c #assuming empennage plate starts where the fuselage ends
-    l_emp = emp_xloc - (wing.x + wing.planform['cr']/4); #distance between c/4 of wing and c/4 of the tail
-    S_h = V_h * S * wing.planform['cr'] / l_emp #that c is the mac, supposedly
-    S_v = V_v * S * wing.planform['b'] / l_emp
-
-    htail = Component(emp_xloc, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab')
-    vtail = Component(emp_xloc, "balsa", type = 'area', AR = ARv, area = S_v, aero = 'vstab')
-
-    payload = Component(wing.x + wing.planform['cr']/4, "other", type = "specified", mass = 0.5* MTOW) #payload capacity be 50% of MTOW
+    # LG - initial guesses
+    NLG = LandingGear(CG - NLG_fwd_strut, "other", type = 'specified', 
+                      mass = MTOW * 0.1 * 0.35, x_cg = 0)
+    MLG = LandingGear(CG + MLG_aft, "other", type = 'specified', 
+                      mass = MTOW * 0.1 * 0.65, x_cg = 0)
     
-
+    ### Propulsion 
+    motor = Component(1.5, "motor", point_mass = True)
+    prop = Component(0.25, "prop", point_mass=True)
+    
     ### Avionics
-    batt = Component(avionics_loc, "battery", point_mass = True)
-    Rx = Component(avionics_loc, "Rx", point_mass = True)
-    Rx_batt = Component(avionics_loc + 4, "Rx batt", point_mass = True)
-    ESC = Component(avionics_loc, "ESC", point_mass = True)
-
-    print("SOEUAHSHEOGUH LOOK AT ME", batt.x)
-
+    batt = Component(7, "battery", point_mass = True)
+    Rx = Component(7, "Rx", point_mass = True)
+    Rx_batt = Component(7, "Rx batt", point_mass = True)
+    ESC = Component(7, "ESC", point_mass = True)
+    
     components = [boom, pod, 
                 NLG, MLG, 
                 wing, htail, vtail,
-                batt, ESC, prop, motor, 
-                payload #funny payload
-                ]
+                batt, ESC, Rx, Rx_batt,
+                motor, prop]
     
 
-    Trainer = Plane("Trainer", components, Sref = S) #collect all component into one plane
+    stick_empty = Plane("stick, empty weight", components, Sref = S) #collect all component into one plane
+    W_empty = stick_empty.MTOW_tally()
+    # print(f"look {W_empty}, look {MTOW}")
 
-    CG_new, mtot = Trainer.CG_tally()
-    MTOW = Trainer.MTOW_tally()
+    payload = Component(wing.x + wing.planform['cr']/4, "other",
+                        type = "specified", mass = MTOW - W_empty, point_mass = True)
+    
+    print(f"payload mass: {payload.m(): 1.2f} lbs")
+    
+    components.append(payload)
+    print(f"Payload Mass Fraction: {payload.m()/MTOW: 1.1%}")
+    
+    stick = Plane("stick", components, Sref = S)
+
+    CG_new, M_tot = stick.CG_tally()
+    MTOW = stick.MTOW_tally()
 
     CG_chord = (CG - wing.x)/ wing.planform['cr']
     #print(f"CG @ {CG_chord:1.1%} chord. ")
-    return Trainer, MTOW, CG_new, CG_chord
+    return stick, MTOW, CG_new
 
-afile = "airfoil_library/S4233.dat"
+afile = "airfoil_library/AG25.dat"
 
 "Point on Constraint Diagram-------------------------------"
-TW = 0.2046                                          #lb/lb--
-WS = 1.245            / 144 #lb/ft^2 * (ft/12in)^2 = lb / in^2
+TW = 0.20                                          #lb/lb--
+T = 10 #lbs
+WS = 2            / 144 #lb/ft^2 * (ft/12in)^2 = lb / in^2
 print(
     f"""Point Selected from the Constraint Diagram: 
     TW = {TW} lb/lb, WS = {WS: 1.4f} lb/sq.in"""
     )
 "----------------------------------------------------------"
 
-"Specifications--------------------------------------------"
-T = 5                                                   #lbs
-MTOW = T/TW                                             #lbs
-print(f"initial MTOW = {MTOW: 1.2f} lbs.")
-"----------------------------------------------------------"
-
-
 "Tail Volume Coefficients & AR-----------------------------"
-AR = 6; tr = 1; 
-ARh = 0.5*AR; V_h = 0.40; 
+AR = 5; tr = 1; 
+ARh = 0.5*AR; V_h = 0.45; 
 ARv = 1.5; V_v = 0.04; 
 "----------------------------------------------------------"
 
-"Default Components on Plane-------------------------------"
-avionics_loc = 8
-
-prop = Component(0, "prop", point_mass = True)
-motor = Component(1, "motor", point_mass = True)
+"Specifications--------------------------------------------"
+MTOW = WS * (72 ** 2 / AR)                              #lbs
+print(f"initial MTOW = {MTOW: 1.2f} lbs.")
 "----------------------------------------------------------"
 
-
 #Routine Setup--------------------------------------------||
-S =  MTOW / WS
-    #initial fuselage definitions
-nose_sec = 8; 
-wing_loc = 12; 
-aft_sec = 24; 
-wing = Wing(wing_loc, "foam", 
-            [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], afile)
+wing_loc = 28
+wing = Wing(wing_loc, "other", 
+                [AR, 72, -1, tr, -1, -1], [-1, 0, 0, 0], 
+                afile, MTOW)
 #initially assume CG @ half root chord behind the wing
-CG = wing.x + wing.planform['cr']/2
-S_h = V_h * wing.planform['S'] * wing.planform['cr'] / aft_sec
-htail = Component(aft_sec, "balsa", type = 'area', AR = ARh, area = S_h, aero = 'hstab') #dummy htail for loop to work
+#CG = wing.x + wing.planform['cr']/2
+#initially assume l_h is half span
+l_h = 0.43 * wing.planform['b']
+S_h = V_h * wing.planform['S'] * wing.planform['cr'] / l_h 
 #--------------------------------------------------------||
 
 
-#Fixed Point Iteration Mass Convergence Study
-res = 1
-print(
-    "Performing Routine 1: Mass Convergence Study..."
-    )
+#force a CG location to iterate for NP
+CG_percent_chord = 0.35
+CG_chord = wing.planform['cr'] * CG_percent_chord
+CG_target_loc = wing.x + CG_chord
 
-while res > 1e-3: 
-    MTOW_old = MTOW
-    S =  MTOW / WS
-    CG_old = CG
-
-    Trainer, MTOW, CG, CG_chord = buildup(CG_old, MTOW_old, nose_sec, wing_loc, aft_sec)
-    #Trainer.plane_plot(Trainer.components)
-    #plt.plot(CG, 0, 'x', color='tab:blue')
-
-    res = abs(MTOW_old - MTOW)
-print(f"Mass Convergence Study Done. MTOW = {MTOW: 1.2f} lbs.")
-print(CG)
-
-#CG Placement Study by varying wing placement
-print("Performing Routine 2: CG Placement Study...")
-CG_chord = (CG - wing.x)/ wing.planform['cr']
-
-#---Configure upper & Lower Limits---
-CG_upper = 0.35                    #
-CG_lower = 0.30                    #
-#------------------------------------
-
-
-def CG_routine(Trainer, wing_loc, CG, MTOW, increment: float, CG_upper = CG_upper, CG_lower = CG_lower): 
-    global w, CG_chord
-    #min wing placement is at nose_sec, furthest back wing placement is at fuse_main.x + fuse_main.length - wing.planform['cr']
-    while  CG_chord < CG_lower or CG_chord > CG_upper: 
-        CG_chord_old = CG_chord
-        if CG_chord_old > CG_upper:
-            wing_loc += increment
-        if CG_chord_old < CG_lower:
-            wing_loc -= increment
-    
-        Trainer, MTOW, CG, CG_chord = buildup(CG, MTOW, nose_sec, wing_loc, aft_sec)
-        Trainer.plane_plot(Trainer.components)
-        plt.plot(CG, 0, 'x', color='tab:blue')
-        
-        print(f"CG is at {CG_chord: 1.1%} chord")
-
-        plt.savefig(f"iteration/{w}.png"); w += 1; 
-    print(f"CG Placement Study done. CG @ {CG_chord:1.1%} chord; MTOW = {MTOW: 1.2f} lbs.")
-    return Trainer, wing_loc, CG, MTOW
+stick, MTOW, CG = buildup(wing.x + CG_chord, MTOW, [AR, 72, -1, 1, -1, -1], wing_loc, l_h)
+print(MTOW)
+plt.show()
 
 #Configure upper & lower limits-------
-sm_upper = 0.20
+sm_upper = 0.15
 sm_lower = 0.10
 #-------------------------------------
+increment = 0.5
+static_margin = avl_np(stick, CG_target_loc)
+print(f"static margin: {static_margin: 1.2%}")
 
-def SM_routine(Trainer, aft_sec, CG, MTOW, increment: float, sm_upper = sm_upper, sm_lower = sm_lower): 
-    global w, static_margin
-    print("Send to AVL for stability...")
-    static_margin, CG_chord, mac = avl_sm(Trainer)
-    while sm_lower < static_margin > sm_upper or static_margin <= 0:
-        if static_margin < sm_lower: #too close
-            aft_sec += increment #increase empennage length
-            #V_h += 0.001 #increase hstab size - change volume coeff, hold off for now
-            pass
-        if static_margin > sm_upper: #too large
-            aft_sec -= increment #decrease empennage length
-            #V_h -= 0.001 #decrease hstab size - change volume coeff, hold off for now
-            pass
-        
-        Trainer, MTOW, CG, CG_chord = buildup(CG, MTOW, nose_sec, wing_loc, aft_sec)
-        Trainer.plane_plot(Trainer.components)
-        plt.plot(CG, 0, 'x', color='tab:blue')
+stick.plane_plot(stick.components)
+static_margin = avl_np(stick, CG_target_loc)
+print(f"static margin: {static_margin: 1.2%}")
+plt.plot(CG_target_loc, 0, 'x')
+plt.savefig(f"iteration/{w}.png"); w += 1; 
 
-        static_margin, CG_chord, mac = avl_sm(Trainer)
-        plt.savefig(f"iteration/{w}.png"); w += 1; 
+w = 0
+while not (sm_lower < static_margin < sm_upper): 
+    MTOW_old = MTOW
+    if static_margin < sm_lower: 
+        S_h -= increment
+    if static_margin > sm_upper:
+        #l_h -= increment
+        S_h += increment
+    print(l_h)
+    stick, MTOW, CG = buildup(CG_target_loc, MTOW_old, [AR, 72, -1, 1, -1, -1], wing_loc, l_h, S_h)
+    stick.plane_plot(stick.components)
+    static_margin = avl_np(stick, CG_target_loc)
+    print(f"static margin: {static_margin: 1.2%}")
+    plt.plot(CG_target_loc, 0, 'x')
+    plt.savefig(f"iteration/{w}.png"); w += 1; 
+#plt.show()
+stick, MTOW, CG = buildup(CG_target_loc, MTOW, [AR, 72, -1, 1, -1, -1], wing_loc, l_h)
 
-        print(f"static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.")
-    return Trainer, aft_sec, CG, MTOW
-
-def LG_routine(Trainer, nose_sec, wing_loc, CG, MTOW, increment: float, fwd_limit = 2):
-    global w
-    while NLG.x < fwd_limit:
-        nose_sec += increment
-        wing_loc += increment 
-        Trainer, MTOW, CG, CG_chord = buildup(CG, MTOW, nose_sec, wing_loc, aft_sec)
-        Trainer.plane_plot(Trainer.components)
-        plt.plot(CG, 0, 'x', color='tab:blue')
-
-        static_margin, CG_chord, mac = avl_sm(Trainer)
-        plt.savefig(f"iteration/{w}.png"); w += 1; 
-
-        print(f"static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.")
-    print(f"NLG location is {NLG.x} in. from the nose.")
-    return Trainer, nose_sec, wing_loc, CG, MTOW
-
-wing_loc = fuse_main.x + fuse_main.length - wing.planform['cr']
-Trainer, wing_loc, CG, MTOW = CG_routine(Trainer, wing_loc, CG, MTOW, 0.5)
-print("now to confirm static margin...")
-Trainer, aft_sec, CG, MTOW = SM_routine(Trainer, aft_sec, CG, MTOW, 1)
-avionics_loc = fuse_main.x - 4
-print("landing gear placement")
-Trainer, nose_sec, wing_loc, CG, MTOW = LG_routine(Trainer, nose_sec, wing_loc, CG, MTOW, 1)
-print(wing_loc, aft_sec, "so funny")
+print(f"current CG discrepancy: {CG - CG_target_loc}") #if forward, negative; if aft, positive
+print(f"boom length: {boom.c}")
+print(f"current Aspect Ratio: {AR}")
+print(stick.mass_breakdown())
 
 #Export Results
 export = open("plane_geometry.txt", 'w')
 export.write(f"""[Results]
-static margin: {static_margin:.1%}, CG @ {CG_chord:1.1%} chord.
-MTOW estimate = {MTOW: 1.2f} lbs.\nPlanform Area S = {wing.planform['S']: 1.4f}\n
-Boom Length: {boom.x: 1.2f} in.\n
+static margin: {static_margin:.1%} forcing CG @ 35% chord. CG discrepancy: {CG - CG_target_loc} in.\n
+MTOW estimate = {MTOW: 1.2f} lbs. Payload Mass Fraction: {payload.m()/MTOW: 1.1%}\n
+Planform Area S = {wing.planform['S']: 1.4f} AR = {AR}\n
+Available Thrust: {T: 1.2f} lbs.\n
+Fuselage Definitions: Total Length {total_length: 1.2f} in. Total Mass {boom.m() + pod.m(): 1.4f} lbs.\n
+\tPod Length: {pod.c: 1.2f} in.\n\tBoom Length: {boom.c: 1.2f} in.\n
 Wing Definitions: Location from nose: {wing.x:1.2f} (in.)\n
 \tWingspan:\t{wing.planform['b']: 1.2f}\n\tRoot chord:\t{wing.planform['cr']: 1.2f}\n\tTip chord:\t{wing.planform['ct']: 1.2f}\n\tLE sweep:\t{float(np.rad2deg(wing.angles['sweep'])): 1.2f} deg.\n
 Empennage Definitions: (in.)\n
-\thstab:\n\tchord\t{htail.c: 1.4f}\n\tspan\t{htail.b: 1.4f}\n\tvstab:\n\tchord\t{vtail.c:1.4f}\n\tspan\t{vtail.b: 1.4f}\n
+\thstab:\n\tchord\t{htail.c: 1.4f}\n\tspan\t{htail.b: 1.4f}\n\tloc\t{htail.x: 1.4f}\n
+\tvstab:\n\tchord\t{vtail.c:1.4f}\n\tspan\t{vtail.b: 1.4f}\n\tloc\t{vtail.x:1.4f}\n
 Landing Gear Placement: (dist. from nose, in.)\n
 \tNLG:\t{NLG.x: 1.4f}\n\tMLG:\t{MLG.x: 1.4f}
 """)
 export.close()
-out = open("plane_geometry.txt")
-print(out.read())
-print(CG)
-#plt.show()
+# out = open("plane_geometry.txt")
+# print(out.read())

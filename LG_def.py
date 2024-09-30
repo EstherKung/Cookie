@@ -2,7 +2,7 @@ import numpy as np
 
 def LG_def(CG, MTOW, fuse_len,
            tipback_angle = 15, AOA_TO = 15, overturn_angle = 60,
-           NLG_W_percent = 0.10, NLG_strut_travel = 2):
+           NLG_W_percent = 0.10, NLG_strut_travel = 7):
     #Fuselage Characteristics!
     Fuselage_len = fuse_len /12 #ft, converted from in
     CG = CG /12 #ft, converted from in

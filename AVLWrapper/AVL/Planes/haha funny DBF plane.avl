@@ -1,0 +1,91 @@
+#Name         
+haha funny DBF plane  
+#Mach         
+0             
+#iYsym        #iZsym        #Zsym         
+0             0             0.0           
+#Sref         #cref         #bref         
+942.54545     13.09091      72.0          
+#Xref         #Yref         #Zref         
+0             0.0           0             
+#CDp          
+0.0           
+#===============================================================================================
+#===============================================================================================
+SURFACE
+#Name         
+Wing          
+#Nchordwise   #Cspace       #Nspanwise    #Sspace       
+8             1.0           31            1.0           
+YDUPLICATE    
+0.0           
+TRANSLATE     
+30   0.0  0.0    
+#-----------------------------------------------------------------------------------------------
+SECTION
+#Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
+0.0           0.0           0.0           13.09091      0             0             0             
+AFILE         
+C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat  
+#-----------------------------------------------------------------------------------------------
+SECTION
+#Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
+0.0           36.0          0.0           13.09091      0             0             0             
+AFILE         
+C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat  
+#===============================================================================================
+#===============================================================================================
+SURFACE
+#Name         
+Hstab         
+#Nchordwise   #Cspace       #Nspanwise    #Sspace       
+8             1.0           12            1.0           
+YDUPLICATE    
+0.0           
+TRANSLATE     
+69.27273  0.0  0.0    
+COMPONENT     
+1             
+#-----------------------------------------------------------------------------------------------
+SECTION
+#Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
+0.0           0.0           0.0           7.06071       0.0           0             0             
+
+CONTROL
+#Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
+Elevator      1.0           0.7           0.0 0.0 0.0   1             
+#-----------------------------------------------------------------------------------------------
+SECTION
+#Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
+0             9.70848       0.0           7.06071       0.0           0             0             
+
+CONTROL
+#Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
+Elevator      1.0           0.7           0.0 0.0 0.0   1             
+#===============================================================================================
+#===============================================================================================
+SURFACE
+#Name         
+Vstab         
+#Nchordwise   #Cspace       #Nspanwise    #Sspace       
+8             1.0           12            1.0           
+TRANSLATE     
+76.83344  0.0  0.0    
+COMPONENT     
+1             
+#-----------------------------------------------------------------------------------------------
+SECTION
+#Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
+0.0           0.0           0.0           6.44547       0.0           0             0             
+
+CONTROL
+#Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
+Rudder        1.0           0.7           0.0 0.0 0.0   1.0           
+#-----------------------------------------------------------------------------------------------
+SECTION
+#Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
+0             0             9.6682        6.44547       0.0           0             0             
+
+CONTROL
+#Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
+Rudder        1.0           0.7           0.0 0.0 0.0   1.0           

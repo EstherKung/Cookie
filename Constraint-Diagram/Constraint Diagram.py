@@ -124,6 +124,7 @@ class Constraint_Diagram:
             return Vto - v[0]
         #TW1 = 0.1; TW2 = 0.11 # Don't change this unless you have to
         TW1 = 0.1; TW2 = 0.07
+
         self.ax.plot(self.cfg['WS'], secant_method(self.cfg['WS'], TW1, TW2, takeoff_error), label = 'Takeoff')
 
     def Constraint_Landing(self, landing_distance: float = None, V_landing: float = None):
@@ -137,8 +138,10 @@ class Constraint_Diagram:
         if not landing_distance: landing_distance = self.cfg['Lld']
         if not V_landing: V_landing = self.cfg['Vld']
         dt = 0.05
-        WS1 = 0.9
-        WS2 = 1.1
+        #WS1 = 0.9
+        WS1 = 0.4
+        WS2 = 0.6
+        #WS2 = 1.1
         def landing_error(Vld, ws):
             x = 0
             while Vld > 0:
@@ -157,16 +160,16 @@ cd.cfg['g']   = 32.17 #ft/s**2
 
 "Constraint defaults"
 cd.cfg['Lto'] = 300 #Takeoff distance, ft
-cd.cfg['Lld'] = 400 #Landing distance, ft
+cd.cfg['Lld'] = 600 #Landing distance, ft
 cd.cfg['G']   = 0.1 #Climb gradient
-cd.cfg['ks']  = 1.1 #Climb configuration
+cd.cfg['ks']  = 1.25 #Climb configuration
 cd.cfg['phi'] = 45  #Sustained bank angle, deg
 
 
 
 "Speeds"
-cd.cfg['Vcr'] = 65.0 #Cruise, ft/s
-cd.cfg['Vld'] = 28.8 #Landing/approach, ft/s
+cd.cfg['Vcr'] = 80.0 #Cruise, ft/s
+cd.cfg['Vld'] = 35.0 #Landing/approach, ft/s
 cd.cfg['Vst'] = 23.0 #Stall, f/ts
 
 "Aerodynamics"
@@ -180,7 +183,7 @@ cd.cfg['CDto'] = 0.02 #Takeoff configuration
 "WS grid"
 cd.cfg['WS']  = np.linspace(0.1,2.2,21)
 
-cd.Constraint_Stall()
+# cd.Constraint_Stall()
 cd.Constraint_Cruise()
 cd.Constraint_Climb()
 cd.Constraint_Landing()
@@ -188,7 +191,7 @@ cd.Constraint_Takeoff()
 cd.Constraint_Maneuver(phi=45)
 cd.Constraint_Cruise(V_cruise=31.0)
 
-plt.legend(loc='upper left', fontsize=14)
+plt.legend(loc='upper right', fontsize=14)
 plt.title('Constraint diagram', fontsize=18)
 plt.xlabel(r'Wing loading $(lb/ft^2)$', fontsize=14)
 plt.ylabel(r'Thrust-to-weight ratio', fontsize=14)
