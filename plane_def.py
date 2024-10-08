@@ -65,7 +65,7 @@ class Component:
                 this.S_wet = 2 * this.cfg['area']
             case 'wing':
                 t = this.thickness
-                S_exp = this.planform['S'] - (fuse_d * this.planform['cr'])
+                S_exp = this.planform['S'] #- (fuse_d * this.planform['cr'])
 
                 if this.planform['tr'] == 1:
                 #this is safa formulation - rectangular wing?
@@ -114,28 +114,35 @@ class Wing(Component):
     def __init__(this, x: float, mat: str, param: list, angles: list, afile: str, MTOW, type = 'aero'):
         """
         this is assuming linear taper, single section wing only, constant airfoil profile throughout.
-        angles in the order [sweep, dihedral, incidence, twist]
-        if want c/4 no sweep, put sweep = -1
+        angles in the order [[% chord sweep location, sweep], dihedral, incidence, twist]
+        let sweep = [-1, -1] for no sweep at max thickness
         param in the order in the order [AR, b, S, taper_ratio, c_r, c_t] 
-        and for the ones that aren't defined, set to -1
+        and for the ones that aren't defined, set to -1  
         """
         super().__init__(x, mat, type, aero = 'wing')
         this.planform = {}; this.angles = {}
         this.planform['AR'], this.planform['b'], this.planform['S'], this.planform['tr'], this.planform['cr'], this.planform['ct'] = planform(param)
+        this.thickness, max_tc_loc = thickness(afile) #technically this is the thickness-to-chord, since dat file normalised it with c = 1
 
         #print(this.planform)
-        if angles[0] == -1: this.angles['sweep'] = np.arctan(0.5*this.planform['cr']*(1-this.planform['tr'])/this.planform['b']) #for quarter no sweep
-        else: this.angles['sweep'] = np.radians(angles[0]); #leading edge sweep
+        if angles[0] == [-1, -1]: angles[0][0] = max_tc_loc; angles[0][1] = 0; 
+        this.angles['sweep'] = np.arctan(np.tan(np.radians(angles[0][1])+2*angles[0][0]*this.planform['cr']*(1-this.planform['tr'])/this.planform['b']))
+        #^ generic find LE sweep based on sweep at given % chord location
         this.angles['dihedral'] = np.radians(angles[1]); this.angles['inc'] = angles[2]; this.angles['tw'] = angles[3]
         #to find mass
         x = np.linspace(0, this.planform['b']/2, 50) #your discretisation wooo
         # xsec = csec(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
+
+        #norm_factor = lambda x: (((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr']))**2
+
+        #xsec = norm_factor * csec(afile)
+        #mass = density * np.trapz(xsec, x)
         # print(xsec)
         # this.mass = this.material * 2 * np.trapz(xsec, x)   
         xcentroid = centroid(afile) * ((this.planform['ct'] - this.planform['cr'])/ (this.planform['b']/2) * x + this.planform['cr'])
         this.x_cg = np.trapz(xcentroid, x)/ (0.5 * this.planform['b']) #this is like average value theorem
 
-        this.thickness = thickness(afile) #technically this is the thickness-to-chord, since dat file normalised it with c = 1
+        
         this.mass = foamcore(this.planform['b'], this.planform['cr'], this.thickness, MTOW)
     
     def geometry(this):
@@ -150,6 +157,10 @@ class Wing(Component):
              0,
              -this.planform['b']/2, -this.planform['b']/2]
         return plt.Polygon(xy = list(zip(x,y)), color='tab:purple', fill = False, linewidth = 1.5)
+    
+    def MAC(this): #MAC for constant taper only!!
+        MAC = 2/3 * this.planform['cr'] * (this.planform['tr']**2 + this.planform['tr'] + 1)/(this.planform['tr'] + 1)
+        return MAC
 
 class LandingGear(Component):
     def geometry(this):

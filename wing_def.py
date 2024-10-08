@@ -4,6 +4,7 @@ from bisect import bisect_left
 import matplotlib.pyplot as plt
 
 #some misc/specific functions to keep the main script from being too overwhelming
+
 def xCG_calc(item: list): #handy help calculate your xCG of a sectional component (discreised) use a list of lists [[mass, location]]
     loc = 0;  mass = 0; 
     for x in item:
@@ -35,7 +36,7 @@ def nearest(xloc, des: str, xcoords, ycoords): #returns the x, y value pair for 
         case 'next':
             return float(after), float(ycoords[pos])
 
-def csec(afile):
+def csec(afile): #unit area
     data = pd.read_table(afile,
                          sep='\s+',skiprows=[0],names=['x','y'],index_col=False)
     area = np.trapz(data['y'], data['x'])
@@ -50,7 +51,7 @@ def centroid(afile):
     centroid = loc/weight
     return(centroid)
 
-def thickness(afile):
+def thickness(afile): #finds (thickness, % chord location)
     data = pd.read_table(afile,
                         sep='\s+',skiprows=[0],names=['x','y'],index_col=False)
     split = int(data['x'].idxmin())
@@ -62,6 +63,7 @@ def thickness(afile):
     else: master = bottom; check = top #default, bottom is the master
     
     t_max = 0
+    xloc = -1
     for x, y in zip(master['x'], master['y']):
         if x == master['x'].tolist()[0]: continue
         if x == master['x'].tolist()[-1]: continue
@@ -75,9 +77,12 @@ def thickness(afile):
         t = abs(yinterp) + abs(y)
         if t > t_max:
             t_max = t
-    return round(t_max, 4)
+            xloc = x
+    
+    if xloc == -1: return "Error in finding maximum thicness location"
+    return round(t_max, 4), xloc
 
-def camber(afile):
+def camber(afile): #incomplete
     print('no')
 
 def planform(inputs: list): #to find planform parameters

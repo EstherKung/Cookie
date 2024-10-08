@@ -7,7 +7,6 @@ from AVLWrapper.Code.Codebase import *
 from LG_def import *
 from powerplant_def import *
  
-
 w = 0; 
 def avl_np(plane: Plane, CG_chord):
     #for avl stability analysis
@@ -31,13 +30,13 @@ def buildup(CG, MTOW, wing_def: list, wing_loc, l_h, S_h = None): #tallies up th
     AR, b, S, tr, cr, ct = planform(wing_def)
     
     wing = Wing(wing_loc, "other", 
-                [AR, -1, S, tr, -1, -1], [-1, 0, 0, 0], 
+                [AR, -1, S, tr, -1, -1], [[-1, -1], 0, 0, 0], 
                 afile, MTOW)
 
     ### 2. EMPENNAGE
     stagger = 0.5 #gap distance between horizontal & vertical plate
     if S_h is None: S_h = V_h * S * wing.planform['cr'] / l_h #that c is typ. MAC; DBF 2025 uses rectangular wing
-    emp_datum = wing.x + wing.planform['cr']/4 + l_h
+    emp_datum = wing.x + wing.MAC()/4 + l_h
 
     htail = Component(emp_datum, "emp", type = 'area', 
                       AR = ARh, area = S_h, aero = 'hstab')
@@ -71,10 +70,10 @@ def buildup(CG, MTOW, wing_def: list, wing_loc, l_h, S_h = None): #tallies up th
     prop = Component(0.25, "prop", point_mass=True)
     
     ### Avionics
-    batt = Component(7, "battery", point_mass = True)
+    batt = Component(8.5, "battery", point_mass = True)
     Rx = Component(7, "Rx", point_mass = True)
     Rx_batt = Component(7, "Rx batt", point_mass = True)
-    ESC = Component(7, "ESC", point_mass = True)
+    ESC = Component(6, "ESC", point_mass = True)
     
     components = [boom, pod, 
                 NLG, MLG, 
@@ -117,7 +116,7 @@ print(
 "----------------------------------------------------------"
 
 "Tail Volume Coefficients & AR-----------------------------"
-AR = 5; tr = 1; 
+AR = 5.5; tr = 0.4; 
 ARh = 0.5*AR; V_h = 0.45; 
 ARv = 1.5; V_v = 0.04; 
 "----------------------------------------------------------"
@@ -130,12 +129,12 @@ print(f"initial MTOW = {MTOW: 1.2f} lbs.")
 #Routine Setup--------------------------------------------||
 wing_loc = 28
 wing = Wing(wing_loc, "other", 
-                [AR, 72, -1, tr, -1, -1], [-1, 0, 0, 0], 
+                [AR, 72, -1, tr, -1, -1], [[-1, -1], 0, 0, 0], 
                 afile, MTOW)
 #initially assume CG @ half root chord behind the wing
 #CG = wing.x + wing.planform['cr']/2
-#initially assume l_h is half span
-l_h = 0.43 * wing.planform['b']
+#initially assume l_h is 40% span
+l_h = 0.4 * wing.planform['b']
 S_h = V_h * wing.planform['S'] * wing.planform['cr'] / l_h 
 #--------------------------------------------------------||
 
@@ -145,15 +144,15 @@ CG_percent_chord = 0.35
 CG_chord = wing.planform['cr'] * CG_percent_chord
 CG_target_loc = wing.x + CG_chord
 
-stick, MTOW, CG = buildup(wing.x + CG_chord, MTOW, [AR, 72, -1, 1, -1, -1], wing_loc, l_h)
+stick, MTOW, CG = buildup(wing.x + CG_chord, MTOW, [AR, 72, -1, tr, -1, -1], wing_loc, l_h)
 print(MTOW)
 plt.show()
 
 #Configure upper & lower limits-------
 sm_upper = 0.15
-sm_lower = 0.10
+sm_lower = 0.08
 #-------------------------------------
-increment = 0.5
+increment = 2
 static_margin = avl_np(stick, CG_target_loc)
 print(f"static margin: {static_margin: 1.2%}")
 
@@ -172,14 +171,14 @@ while not (sm_lower < static_margin < sm_upper):
         #l_h -= increment
         S_h += increment
     print(l_h)
-    stick, MTOW, CG = buildup(CG_target_loc, MTOW_old, [AR, 72, -1, 1, -1, -1], wing_loc, l_h, S_h)
+    stick, MTOW, CG = buildup(CG_target_loc, MTOW_old, [AR, 72, -1, tr, -1, -1], wing_loc, l_h, S_h)
     stick.plane_plot(stick.components)
     static_margin = avl_np(stick, CG_target_loc)
     print(f"static margin: {static_margin: 1.2%}")
     plt.plot(CG_target_loc, 0, 'x')
     plt.savefig(f"iteration/{w}.png"); w += 1; 
 #plt.show()
-stick, MTOW, CG = buildup(CG_target_loc, MTOW, [AR, 72, -1, 1, -1, -1], wing_loc, l_h)
+stick, MTOW, CG = buildup(CG_target_loc, MTOW, [AR, 72, -1, tr, -1, -1], wing_loc, l_h)
 
 print(f"current CG discrepancy: {CG - CG_target_loc}") #if forward, negative; if aft, positive
 print(f"boom length: {boom.c}")

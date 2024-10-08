@@ -1,37 +1,37 @@
 [Results]
-static margin: 12.0% forcing CG @ 35% chord. CG discrepancy: -6.418637623618395 in.
+static margin: 8.7% forcing CG @ 35% chord. CG discrepancy: -7.620900438485439 in.
 
-MTOW estimate =  14.40 lbs. Payload Mass Fraction:  44.2%
+MTOW estimate =  13.09 lbs. Payload Mass Fraction:  33.5%
 
-Planform Area S =  1036.8000 AR = 5
+Planform Area S =  942.5455 AR = 5.5
 
 Available Thrust:  10.00 lbs.
 
-Fuselage Definitions: Total Length  79.36 in. Total Mass  0.9557 lbs.
+Fuselage Definitions: Total Length  77.57 in. Total Mass  0.9402 lbs.
 
 	Pod Length:  25.00 in.
-	Boom Length:  54.36 in.
+	Boom Length:  52.57 in.
 
 Wing Definitions: Location from nose: 28.00 (in.)
 
 	Wingspan:	 72.00
-	Root chord:	 14.40
-	Tip chord:	 14.40
-	LE sweep:	 0.00 deg.
+	Root chord:	 18.70
+	Tip chord:	 7.48
+	LE sweep:	 4.40 deg.
 
 Empennage Definitions: (in.)
 
 	hstab:
-	chord	 9.3168
-	span	 23.2919
-	loc	 62.5600
+	chord	 10.0076
+	span	 27.5209
+	loc	 60.2731
 
 	vstab:
-	chord	6.9870
-	span	 10.4805
-	loc	72.3768
+	chord	6.7852
+	span	 10.1778
+	loc	70.7807
 
 Landing Gear Placement: (dist. from nose, in.)
 
-	NLG:	 6.5340
-	MLG:	 36.1431
+	NLG:	 9.9296
+	MLG:	 37.4273
