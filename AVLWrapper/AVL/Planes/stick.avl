@@ -5,7 +5,7 @@ stick
 #iYsym        #iZsym        #Zsym         
 0             0             0.0           
 #Sref         #cref         #bref         
-942.54545     13.89255      72.0          
+740.57143     10.91558      72.0          
 #Xref         #Yref         #Zref         
 0             0.0           0             
 #CDp          
@@ -20,17 +20,17 @@ Wing
 YDUPLICATE    
 0.0           
 TRANSLATE     
-28   0.0  0.0    
+20   0.0  0.0    
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-0.0           0.0           0.0           18.7013       0             0             0             
+0.0           0.0           0.0           14.69388      0             0             0             
 AFILE         
 C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat  
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-2.77265       36.0          0.0           7.48052       0             0             0             
+2.17687       36.0          0.0           5.87755       0             0             0             
 AFILE         
 C:/Users/eneiche/Documents/airfoil-sauce/airfoil_library/Selig/S7055.dat  
 #===============================================================================================
@@ -43,13 +43,13 @@ Hstab
 YDUPLICATE    
 0.0           
 TRANSLATE     
-60.2731  0.0  0.0    
+55.12886  0.0  0.0    
 COMPONENT     
 1             
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-0.0           0.0           0.0           9.56165       0.0           0             0             
+0.0           0.0           0.0           6.07031       0.0           0             0             
 
 CONTROL
 #Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
@@ -57,7 +57,7 @@ Elevator      1.0           0.7           0.0 0.0 0.0   1
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-0             13.14727      0.0           9.56165       0.0           0             0             
+0             10.62304      0.0           6.07031       0.0           0             0             
 
 CONTROL
 #Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
@@ -70,13 +70,13 @@ Vstab
 #Nchordwise   #Cspace       #Nspanwise    #Sspace       
 8             1.0           12            1.0           
 TRANSLATE     
-70.33475  0.0  0.0    
+55.12886  0.0  0.0    
 COMPONENT     
 1             
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-0.0           0.0           0.0           6.82403       0.0           0             0             
+0.0           0.0           0.0           6.49078       0.0           0             0             
 
 CONTROL
 #Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       
@@ -84,7 +84,7 @@ Rudder        1.0           0.7           0.0 0.0 0.0   1.0
 #-----------------------------------------------------------------------------------------------
 SECTION
 #Xle          #Yle          #Zle          #Chord        #Ainc         #Nspanwise    #Sspace       
-0             0             10.23605      6.82403       0.0           0             0             
+0             0             9.73618       6.49078       0.0           0             0             
 
 CONTROL
 #Cname        #Cgain        #Xhinge       #HingeVec     #SgnDup       

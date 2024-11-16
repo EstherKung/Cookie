@@ -209,34 +209,41 @@ aircraftparm = {"b"        : 1.83, #wingspan
                 "n_skin"   : 2, #of skin plies
                 "sig_skin" : 0.093, #skin fabric weight
                 "sig_tape" : 0.08, #cap fabric weight
-                "rho_core" : 16.0185, #foam core density
+                "rho_core" : 35, #foam core density
                 "G_core"   : 1.2e7, #foam core shear modulus
                 "g"        : 9.81, #acceleration due to gravity
                 }
 
 #let it take in arguments of wingspan, chord, % airfoil thickness
-def foamcore(b, c, t_c, m_0, N = aircraftparm['N'], w = aircraftparm['w'], 
+def foamcore(b, c_r, c_t, t_c, m_0, N = aircraftparm['N'], w = aircraftparm['w'],    
              s_crit = aircraftparm['s_crit'], t_cap = aircraftparm['t_cap'], t_skin = aircraftparm['t_skin'], 
              n_skin = aircraftparm['n_skin'], sig_skin = aircraftparm['sig_skin'], sig_tape = aircraftparm['sig_tape'], 
              rho_core = aircraftparm['rho_core'], G_core = aircraftparm['G_core'], g = 9.81, afile = "airfoil_library/AG25.dat"):
     """code is based in metric!!!"""
     b = b * 0.0254 #inches to m
-    c = c * 0.0254 #inches to m
+    c_r = c_r * 0.0254 #inches to m
+    c_t = c_t * 0.0254 #inches to m
     m_0 = m_0 * 0.453592 #lbs to kg
     
-    #Load, Shear, Bending 
+    #Root/Tip Airfoil thickness 
     y = np.linspace(0,b/2,500)
+    d_r = c_r * t_c
+    d_t = c_t * t_c
+    d_y = d_r - 2 * y * ((d_r - d_t)/b)
+    d_t = d_y - 2 * n_skin * t_skin
+
+    #Load, Shear, Bending
     omega = (N*m_0*g)/b
     # print(f"omega: {omega}")
     V = omega*y-(1/2)*omega*b
     M = (1/2)*omega*y**2-(1/2)*omega*b*y+(1/8)*omega*b**2
 
     #Cap Plies
-    n = (1.5*M) / (s_crit*t_cap*w*((c*t_c)-2*(n_skin*t_skin)))
+    n = (1.5 * M) / (s_crit * t_cap * w * d_t)
     n = np.ceil(n)
 
     #Shear Web Check
-    d_s = (N*m_0*g*b) / (8*G_core*w*(c*t_c-2*n_skin*t_skin-n[1]*t_cap))
+    #d_s = (N*m_0*g*b) / (8*G_core*w*(c*t_c-2*n_skin*t_skin-n[1]*t_cap))
     # print(f"Shear Deflection: {d_s}")
 
     #Tabulation & Display:
@@ -274,10 +281,15 @@ def foamcore(b, c, t_c, m_0, N = aircraftparm['N'], w = aircraftparm['w'],
     # print(f"1 Cap Area: {A_tape}")
 
 
+
     W_cap = 6*A_tape*sig_tape
-    W_skin = 6*c*b*sig_skin
-    #W_foam = (1/2)*(c*c*t_c*b*rho_core)*0.76 #ONLY USE IF DOING THICKNESS SWEEP
-    W_foam = rho_core * csec(afile) * c** 2 * b * 0.5
+
+    S_skin = ((c_r + c_t) / 2) * (b / 2)
+    W_skin = 6*S_skin*n_skin*sig_skin
+    
+    A_foil = ((( c_t - c_r ) / (b / 2)) * y + c_r) ** 2
+    V_wing = np.trapz(csec(afile)*A_foil, y)
+    W_foam = rho_core * V_wing
 
     mass = {"Spar Cap Mass":  W_cap,
             "Wing Skin Mass": W_skin,

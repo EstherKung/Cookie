@@ -143,7 +143,7 @@ class Wing(Component):
         this.x_cg = np.trapz(xcentroid, x)/ (0.5 * this.planform['b']) #this is like average value theorem
 
         
-        this.mass = foamcore(this.planform['b'], this.planform['cr'], this.thickness, MTOW)
+        this.mass = foamcore(this.planform['b'], this.planform['cr'], this.planform['ct'], this.thickness, MTOW)
     
     def geometry(this):
         x = [this.x,

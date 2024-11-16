@@ -24,7 +24,7 @@ def avl_np(plane: Plane, CG_chord):
     return (Xnp - CG_chord)/mac #static margin percentage
 
 def buildup(CG, MTOW, wing_def: list, wing_loc, l_h, S_h = None): #tallies up the CG of the new configuration
-    global wing, boom, pod, NLG, MLG, htail, vtail, total_length, payload
+    global wing, boom, pod, NLG, MLG, htail, vtail, total_length, payload, LG_height, MLG_side
 
     ### 1. Wing
     AR, b, S, tr, cr, ct = planform(wing_def)
@@ -34,20 +34,20 @@ def buildup(CG, MTOW, wing_def: list, wing_loc, l_h, S_h = None): #tallies up th
                 afile, MTOW)
 
     ### 2. EMPENNAGE
-    stagger = 0.5 #gap distance between horizontal & vertical plate
+    #  stagger = 0.5 #gap distance between horizontal & vertical plate
     if S_h is None: S_h = V_h * S * wing.planform['cr'] / l_h #that c is typ. MAC; DBF 2025 uses rectangular wing
     emp_datum = wing.x + wing.MAC()/4 + l_h
 
     htail = Component(emp_datum, "emp", type = 'area', 
                       AR = ARh, area = S_h, aero = 'hstab')
     
-    l_v = l_h + htail.c + stagger
+    l_v = l_h # + htail.c + stagger
     S_v = V_v * S * wing.planform['b'] / l_v
-    vtail = Component(emp_datum + htail.c + 0.5, "emp", type = 'area', 
+    vtail = Component(emp_datum, "emp", type = 'area', 
                       AR = ARv, area = S_v, aero = 'vstab')
 
     ### 3. POD + BOOM
-    pod = Component(2.4, "pod", length = 25, diameter = 3, x_cg = 0.4* 25)
+    pod = Component(2.4, "pod", length = 18, diameter = 5.5, x_cg = 0.4* 20)
     total_length = vtail.x + vtail.c #total length of plane
     boom = Component(pod.c, "boom", type = 'length', 
                      length = total_length - pod.c,
@@ -116,9 +116,9 @@ print(
 "----------------------------------------------------------"
 
 "Tail Volume Coefficients & AR-----------------------------"
-AR = 5.5; tr = 0.4; 
-ARh = 0.5*AR; V_h = 0.45; 
-ARv = 1.5; V_v = 0.04; 
+AR = 7; tr = 0.4; 
+ARh = 0.5*AR; V_h = 0.4 * 0.96; 
+ARv = 1.5; V_v = 0.04 * 0.96; 
 "----------------------------------------------------------"
 
 "Specifications--------------------------------------------"
@@ -127,14 +127,14 @@ print(f"initial MTOW = {MTOW: 1.2f} lbs.")
 "----------------------------------------------------------"
 
 #Routine Setup--------------------------------------------||
-wing_loc = 28
+wing_loc = 20
 wing = Wing(wing_loc, "other", 
                 [AR, 72, -1, tr, -1, -1], [[-1, -1], 0, 0, 0], 
                 afile, MTOW)
 #initially assume CG @ half root chord behind the wing
 #CG = wing.x + wing.planform['cr']/2
 #initially assume l_h is 40% span
-l_h = 0.4 * wing.planform['b']
+l_h = 0.45 * wing.planform['b']
 S_h = V_h * wing.planform['S'] * wing.planform['cr'] / l_h 
 #--------------------------------------------------------||
 
@@ -150,9 +150,9 @@ plt.show()
 
 #Configure upper & lower limits-------
 sm_upper = 0.15
-sm_lower = 0.08
+sm_lower = 0.05
 #-------------------------------------
-increment = 2
+increment = 0.2
 static_margin = avl_np(stick, CG_target_loc)
 print(f"static margin: {static_margin: 1.2%}")
 
@@ -175,6 +175,7 @@ while not (sm_lower < static_margin < sm_upper):
     stick.plane_plot(stick.components)
     static_margin = avl_np(stick, CG_target_loc)
     print(f"static margin: {static_margin: 1.2%}")
+    print(f"fuselage length: {total_length}")
     plt.plot(CG_target_loc, 0, 'x')
     plt.savefig(f"iteration/{w}.png"); w += 1; 
 #plt.show()
@@ -188,7 +189,7 @@ print(stick.mass_breakdown())
 #Export Results
 export = open("plane_geometry.txt", 'w')
 export.write(f"""[Results]
-static margin: {static_margin:.1%} forcing CG @ 35% chord. CG discrepancy: {CG - CG_target_loc} in.\n
+static margin: {static_margin:.1%} forcing CG @ 35% chord ({CG_target_loc: 1.2f}). CG discrepancy: {CG - CG_target_loc} in.\n
 MTOW estimate = {MTOW: 1.2f} lbs. Payload Mass Fraction: {payload.m()/MTOW: 1.1%}\n
 Planform Area S = {wing.planform['S']: 1.4f} AR = {AR}\n
 Available Thrust: {T: 1.2f} lbs.\n
@@ -201,6 +202,7 @@ Empennage Definitions: (in.)\n
 \tvstab:\n\tchord\t{vtail.c:1.4f}\n\tspan\t{vtail.b: 1.4f}\n\tloc\t{vtail.x:1.4f}\n
 Landing Gear Placement: (dist. from nose, in.)\n
 \tNLG:\t{NLG.x: 1.4f}\n\tMLG:\t{MLG.x: 1.4f}
+\tMLG side: {MLG_side: 1.4f}\tMLG Height: {LG_height:1.4f}\t
 """)
 export.close()
 # out = open("plane_geometry.txt")
